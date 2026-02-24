@@ -41,7 +41,7 @@ class UsuarioController {
             id = "1234",
             nombre = "Aureliano Buendía",
             email = "aureliano.buendia@gmail.com",
-            cp = "12345",
+            cp = "12345"
         )
         logger.info("Usuario recuperado: $usuarioFake")
         return ResponseEntity.ok(usuarioFake)
@@ -65,7 +65,7 @@ class UsuarioController {
     ): ResponseEntity<Usuario> {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
-        logger.info("Usuario creado: $usuarioCreado")
+        logger.info("Usuario para agregar: $usuarioCreado")
         return ResponseEntity.ok(usuarioCreado)
     }
 
@@ -125,7 +125,7 @@ class UsuarioController {
             id = "1234",
             nombre = "Aureliano Buendía",
             email = "aureliano.buendia@gmail.com",
-            cp = "12345",
+            cp = "12345"
         )
         val logoutResponse = LogoutResponse(
             usuarioFake.id,
@@ -133,6 +133,39 @@ class UsuarioController {
         )
         logger.info("Logout exitoso para usuario: ${usuarioFake.id}")
         return ResponseEntity.ok(logoutResponse)
+    }
+
+    /**
+     * Endpoint para actualizar la información de un usuario existente.
+     * 
+     * Permite modificar campos como el email o la contraseña. Recibe un JSON con los datos a actualizar
+     * y retorna el usuario actualizado.
+     * 
+     * URL:    http://localhost:8080/usuarios
+     * Metodo: PUT
+     * 
+     * @param updateUsuarioRequest DTO que contiene los datos a actualizar (email, password).
+     * @Return ResponseEntity con el usuario actualizado y código HTTP 200 (OK).
+     */
+    @PutMapping
+    fun updateUsuario(
+        @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
+    ): ResponseEntity<Usuario> {
+        logger.info("Solicitud de actualización recibida: $updateUsuarioRequest")
+        val usuarioFake = Usuario(
+            id = "1234",
+            nombre = "Aureliano Buendía",
+            email = "aureliano.buendia@gmail.com",
+            cp = "12345",
+            password = "macondo123"
+        )
+        logger.info("Usuario encontrado: $usuarioFake")
+        val usuarioActualizado = usuarioFake.copy(
+            email = updateUsuarioRequest.email ?: usuarioFake.email,
+            password = updateUsuarioRequest.password ?: usuarioFake.password
+        )
+        logger.info("Usuario actualizado: $usuarioActualizado")
+        return ResponseEntity.ok(usuarioActualizado)
     }
 
 }
