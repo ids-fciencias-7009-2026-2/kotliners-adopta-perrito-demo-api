@@ -19,7 +19,7 @@ import java.time.LocalDateTime
  * Controlador encargado de exponer los endpoints REST relacionados 
  * con la gestión de usuarios.
  */
-@Controller
+@RestController
 @RequestMapping("/usuarios") 
 class UsuarioController {
 
@@ -162,8 +162,9 @@ class UsuarioController {
         )
         logger.info("Usuario encontrado: $usuarioFake")
         val usuarioActualizado = usuarioFake.copy(
-            email = updateUsuarioRequest.email ?: usuarioFake.email,
-            password = updateUsuarioRequest.password ?: usuarioFake.password
+            cp = updateUsuarioRequest.cp, 
+            email = updateUsuarioRequest.email,
+            password = updateUsuarioRequest.password
         )
         logger.info("Usuario actualizado: $usuarioActualizado")
         return ResponseEntity.ok(usuarioActualizado)
