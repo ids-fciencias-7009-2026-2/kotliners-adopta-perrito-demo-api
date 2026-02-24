@@ -28,6 +28,6 @@ data class Usuario (
     /**
      * Contraseña del usuario.
      */
-    var password : String,
+    var password: String? = null
 
     )
