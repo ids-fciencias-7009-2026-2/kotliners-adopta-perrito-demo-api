@@ -4,10 +4,10 @@ package com.kotliners.adoptaPerrito.controllers
 // ToDO: Verificar los nombres de las clases
 import com.kotliners.adoptaPerrito.domain.Usuario 
 import com.kotliners.adoptaPerrito.domain.toUsuario
-import com.dunder.mifflin.paper.dunderSys.dto.request.CreateUsuarioRequest
-import com.dunder.mifflin.paper.dunderSys.dto.request.LoginRequest
-import com.dunder.mifflin.paper.dunderSys.dto.request.UpdateUsuarioRequest
-import com.dunder.mifflin.paper.dunderSys.dto.response.LogoutResponse
+import com.kotliners.adoptaPerrito.dto.request.CreateUsuarioRequest
+import com.kotliners.adoptaPerrito.dto.request.LoginRequest
+import com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest
+import com.kotliners.adoptaPerrito.dto.response.LogoutResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -19,6 +19,7 @@ import java.time.LocalDateTime
  * Controlador encargado de exponer los endpoints REST relacionados 
  * con la gestión de usuarios.
  */
+@Controller
 @RequestMapping("/usuarios") 
 class UsuarioController {
 
@@ -57,7 +58,7 @@ class UsuarioController {
      * Metodo: POST
      * 
      * @param createUsuarioRequest DTO que contiene los datos necesarios para crear un nuevo usuario.
-     * @Return ResponseEntity con el usuario creado y código HTTP 200 (OK).
+     * @Return ResponseEntity con el usuario creado y código HTTP 201 (Created).
      */
     @PostMapping("/register")
     fun agregaUsuario(
@@ -66,7 +67,7 @@ class UsuarioController {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
         logger.info("Usuario para agregar: $usuarioCreado")
-        return ResponseEntity.ok(usuarioCreado)
+        return ResponseEntity.status(201).body(usuarioCreado)
     }
 
     /**
@@ -93,15 +94,14 @@ class UsuarioController {
             cp = "12345",
             password = "macondo123"
         )
-        logger.info("Intentando login para usuario: ${loginRequest.id}")
         return if (
             loginRequest.email == usuarioFake.email &&
             loginRequest.password == usuarioFake.password
         ) {
-            logger.info("Login exitoso para usuario: ${loginRequest.id}")
+            logger.info("Login exitoso")
             ResponseEntity.ok("Login exitoso")
         } else {
-            logger.warn("Login fallido para usuario: ${loginRequest.id}")
+            logger.warn("Login fallido")
             ResponseEntity.status(401).body("Credenciales inválidas")
         }
     }
@@ -152,6 +152,7 @@ class UsuarioController {
         @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Usuario> {
         logger.info("Solicitud de actualización recibida: $updateUsuarioRequest")
+        // ToDO: Verificar campos con clase Usuario
         val usuarioFake = Usuario(
             id = "1234",
             nombre = "Aureliano Buendía",
