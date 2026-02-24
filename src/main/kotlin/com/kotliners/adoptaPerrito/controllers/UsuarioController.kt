@@ -27,6 +27,7 @@ class UsuarioController {
 
     /**
      * Endpoint que devuelve la información del usuario autenticado.
+     * En esta versión de prueba se retorna un usuario "fake" con datos simulados.
      * 
      * URL:    http://localhost:8080/usuarios/me
      * Metodo: GET
@@ -49,6 +50,9 @@ class UsuarioController {
     /**
      * Endpoint para registrar un nuevo usuario en el sistema.
      * 
+     * Recibe un JSON con los datos necesarios para crear un nuevo usuario
+     * y los transforma en un objeto dominio.
+     * 
      * URL:    http://localhost:8080/usuarios/register
      * Metodo: POST
      * 
@@ -67,6 +71,8 @@ class UsuarioController {
 
     /**
      * Endpoint para simula el proceso de autenticación de un usuario.
+     * Recibe un JSON con las credenciales (email y password) y verifica si coinciden
+     * con un usuario "fake" predefinido. 
      * 
      * URL:    http://localhost:8080/usuarios/login
      * Metodo: POST
@@ -100,5 +106,33 @@ class UsuarioController {
         }
     }
 
+    /**
+     * Endpoint para simular el proceso de logout de un usuario.
+     * 
+     * Genera una respuesta de éxito con un mensaje que incluye 
+     * el ID del usuario y la fecha/hora del logout.
+     * 
+     * URL:    http://localhost:8080/usuarios/logout
+     * Metodo: POST
+     * 
+     * @Return ResponseEntity con un mensaje de éxito y código HTTP 200 (OK).
+     */
+    @PostMapping("/logout")
+    fun logout(): ResponseEntity<LogoutResponse> {
+        logger.info("Solicitud de logout recibida")
+        // ToDO: Verificar campos con clase Usuario
+        val usuarioFake = Usuario(
+            id = "1234",
+            nombre = "Aureliano Buendía",
+            email = "aureliano.buendia@gmail.com",
+            cp = "12345",
+        )
+        val logoutResponse = LogoutResponse(
+            usuarioFake.id,
+            LocalDateTime.now().toString()
+        )
+        logger.info("Logout exitoso para usuario: ${usuarioFake.id}")
+        return ResponseEntity.ok(logoutResponse)
+    }
 
 }
