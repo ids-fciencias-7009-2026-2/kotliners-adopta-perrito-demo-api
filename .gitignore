@@ -33,3 +33,10 @@ build/
 .vscode/
 
 **.env
+
+# Java crash logs and temporary files
+hs_err_pid*.log
+replay_pid*.log
+*.log
+*.tmp
+*.temp
