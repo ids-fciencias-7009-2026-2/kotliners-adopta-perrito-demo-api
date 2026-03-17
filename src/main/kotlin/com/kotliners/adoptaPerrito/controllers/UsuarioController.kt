@@ -63,29 +63,20 @@ class UsuarioController {
     fun getCurrentUser(
         @RequestHeader("Authorization") token: String?
     ): ResponseEntity<Any> {
-
         logger.info("Solicitud /me recibida con token: $token")
-
         if (token == null) {
             return ResponseEntity.status(401).body("Token requerido")
         }
-
-        // 🔥 LIMPIEZA CORRECTA DEL TOKEN
         val cleanToken = token.replace("Bearer ", "").trim()
-
         val userFound = userService.findByToken(cleanToken)
-
         if (userFound == null) {
             return ResponseEntity.status(401).body("Token inválido")
         }
-
         val response = mapOf(
             "id" to userFound.id,
             "name" to userFound.nombre,
-            "email" to userFound.email,
-            "created_at" to userFound.createdAt
+            "email" to userFound.email
         )
-
         return ResponseEntity.ok(response)
     }
 
