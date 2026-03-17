@@ -1,7 +1,5 @@
 package com.kotliners.adoptaPerrito.domain
 
-import java.time.LocalDate
-
 /**
  * Modelo de dominio que representa a un usuario del sistema de adopción.
  */
@@ -25,7 +23,7 @@ data class Usuario (
     /**
      * Rol del usuario (cuidador o adoptante).
      */
-    var rol: String,
+    var rol: Rol,
 
     /**
      * URL de la foto de perfil.
@@ -60,5 +58,5 @@ data class Usuario (
     /**
      * Contraseña.
      */
-    var password: String? = null
+    var password: String
 )

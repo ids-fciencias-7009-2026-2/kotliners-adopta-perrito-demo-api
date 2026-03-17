@@ -1,15 +1,19 @@
 package com.kotliners.adoptaPerrito.controllers
 
-// ToDO: validar que los campos coincidan con la clase Usuario del dominio
-// ToDO: Verificar los nombres de las clases
 import com.kotliners.adoptaPerrito.domain.Usuario 
 import com.kotliners.adoptaPerrito.domain.toUsuario
 import com.kotliners.adoptaPerrito.dto.request.CreateUsuarioRequest
 import com.kotliners.adoptaPerrito.dto.request.LoginRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest
 import com.kotliners.adoptaPerrito.dto.response.LogoutResponse
+import com.kotliners.adoptaPerrito.services.UsuarioService
+
+import java.security.MessageDigest
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
@@ -26,6 +30,13 @@ class UsuarioController {
     /* Logger para registrar eventos importantes del flujo de ejecución. */
     private val logger: Logger = LoggerFactory.getLogger(UsuarioController::class.java)
 
+    /* Servicio de usuarios. */
+    @Autowired
+    lateinit var userService: UsuarioService
+
+    /* Conjunto de tokens activos. */
+    val activeTokens = mutableSetOf<String>()
+
     /**
      * Endpoint que devuelve la información del usuario autenticado.
      * En esta versión de prueba se retorna un usuario "fake" con datos simulados.
@@ -35,9 +46,9 @@ class UsuarioController {
      * 
      * @Return ResponseEntity con un objeto Usuario y código HTTP 200 (OK).
      */
+    /* 
     @GetMapping("/me")
     fun retrieveUsuario(): ResponseEntity<Usuario> {
-        // ToDO: Verificar campos con clase Usuario
         val usuarioFake = Usuario(
             id = "1234",
             nombre = "Aureliano Buendía",
@@ -46,6 +57,20 @@ class UsuarioController {
         )
         logger.info("Usuario recuperado: $usuarioFake")
         return ResponseEntity.ok(usuarioFake)
+    }
+    */
+
+    /**
+     * Función auxiliar para hash de contraseñas usando SHA-256. 
+     * 
+     * @param password Contraseña en texto plano.
+     * @return Contraseña hasheada en formato hexadecimal.
+     */
+    fun hashPassword(password: String): String {
+        val bytes = MessageDigest
+            .getInstance("SHA-256")
+            .digest(password.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
     }
 
     /**
@@ -66,8 +91,11 @@ class UsuarioController {
     ): ResponseEntity<Usuario> {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
-        logger.info("Usuario para agregar: $usuarioCreado")
-        return ResponseEntity.status(201).body(usuarioCreado)
+        val hashedPassword = hashPassword(usuarioCreado.password)
+        val usuarioConPasswordHash = usuarioCreado.copy(password = hashedPassword)
+        val usuarioGuardado = userService.addNewUsuario(usuarioConPasswordHash)
+        logger.info("Usuario registrado exitosamente: $usuarioGuardado")
+        return ResponseEntity.status(201).body(usuarioGuardado)
     }
 
     /**
@@ -81,12 +109,12 @@ class UsuarioController {
      * @param loginRequest DTO que contiene las credenciales de login (email y password).
      * @Return ResponseEntity con un mensaje de éxito o error y código HTTP: 200 (OK) o 401 (Unauthorized).
      */
+    /*
     @PostMapping("/login")
     fun login(
         @RequestBody loginRequest: LoginRequest
     ): ResponseEntity<String> {
         logger.info("Solicitud de login recibida: $loginRequest")
-        // ToDO: Verificar campos con clase Usuario
         val usuarioFake = Usuario(
             id = "1234",
             nombre = "Aureliano Buendía",
@@ -105,6 +133,7 @@ class UsuarioController {
             ResponseEntity.status(401).body("Credenciales inválidas")
         }
     }
+    */
 
     /**
      * Endpoint para simular el proceso de logout de un usuario.
@@ -117,10 +146,10 @@ class UsuarioController {
      * 
      * @Return ResponseEntity con un mensaje de éxito y código HTTP 200 (OK).
      */
+    /*
     @PostMapping("/logout")
     fun logout(): ResponseEntity<LogoutResponse> {
         logger.info("Solicitud de logout recibida")
-        // ToDO: Verificar campos con clase Usuario
         val usuarioFake = Usuario(
             id = "1234",
             nombre = "Aureliano Buendía",
@@ -134,6 +163,7 @@ class UsuarioController {
         logger.info("Logout exitoso para usuario: ${usuarioFake.id}")
         return ResponseEntity.ok(logoutResponse)
     }
+    */
 
     /**
      * Endpoint para actualizar la información de un usuario existente.
@@ -147,12 +177,12 @@ class UsuarioController {
      * @param updateUsuarioRequest DTO que contiene los datos a actualizar (email, password).
      * @Return ResponseEntity con el usuario actualizado y código HTTP 200 (OK).
      */
+    /*
     @PutMapping
     fun updateUsuario(
         @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Usuario> {
         logger.info("Solicitud de actualización recibida: $updateUsuarioRequest")
-        // ToDO: Verificar campos con clase Usuario
         val usuarioFake = Usuario(
             id = "1234",
             nombre = "Aureliano Buendía",
@@ -169,5 +199,5 @@ class UsuarioController {
         logger.info("Usuario actualizado: $usuarioActualizado")
         return ResponseEntity.ok(usuarioActualizado)
     }
-
+    */
 }

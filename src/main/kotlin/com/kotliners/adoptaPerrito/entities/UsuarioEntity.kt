@@ -1,6 +1,10 @@
 package com.kotliners.adoptaPerrito.entities
 
+import com.kotliners.adoptaPerrito.domain.Rol
+
 import jakarta.persistence.Column
+import jakarta.persistence.Enumerated
+import jakarta.persistence.EnumType
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -45,8 +49,9 @@ data class UsuarioEntity(
     /**
      * Rol del usuario (cuidador o adoptante), no nulo.
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "rol")
-    var rol: String,
+    var rol: Rol,
 
     /**
     * URL de la foto de perfil, puede ser nulo.
