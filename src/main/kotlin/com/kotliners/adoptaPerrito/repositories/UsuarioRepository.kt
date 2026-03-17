@@ -37,6 +37,24 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
      */
     @Query("select u from UsuarioEntity u where u.email = :email")
     fun findByEmail(email:String):UsuarioEntity?
+
+    /**
+     * Busca un usuario por su nombre de usuario (username).
+     * 
+     * @param username El nombre de usuario del usuario.
+     * @return UsuarioEntity si existe, <code>null</code> en caso contrario.
+     */
+    @Query("select u from UsuarioEntity u where u.username = :username")
+    fun findByUsername(username:String):UsuarioEntity?
+
+    /**
+     * Busca un usuario por su CURP.
+     * 
+     * @param curp La CURP del usuario.
+     * @return UsuarioEntity si existe, <code>null</code> en caso contrario.
+     */
+    @Query("select u from UsuarioEntity u where u.curp = :curp")
+    fun findByCurp(curp:String):UsuarioEntity?
     
     /**
      * Busca un usuario por su correo electrónico y contraseña.
