@@ -14,7 +14,7 @@ fun CreateUsuarioRequest.toUsuario(): Usuario {
     // Creamos el objeto de dominio usando los datos del DTO y un id aleatorio
     return Usuario(
         id = null, // "id-random-" + UUID.randomUUID().toString(), 
-        curp = this.curp,
+        curp = this.curp.uppercase(),
         username = this.username,
         rol = this.rol,
         fotoPerfil = this.fotoPerfil,
