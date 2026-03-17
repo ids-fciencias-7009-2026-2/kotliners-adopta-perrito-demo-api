@@ -8,8 +8,10 @@ import org.springframework.boot.runApplication
 class AdoptaPerritoApplication
 
 fun main(args: Array<String>) {
-	dotenv().entries().forEach {
-		System.setProperty(it.key, it.value)
-	}
-	runApplication<AdoptaPerritoApplication>(*args)
+
+dotenv().entries().forEach {
+    System.setProperty(it.key, it.value)
+}
+
+runApplication<AdoptaPerritoApplication>(*args)
 }

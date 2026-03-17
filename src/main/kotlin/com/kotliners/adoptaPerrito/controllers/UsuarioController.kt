@@ -59,6 +59,17 @@ class UsuarioController {
      */
     val activeTokens = mutableSetOf<String>()
 
+    /**
+     * Endpoint para obtener la información del usuario actualmente autenticado.
+     * Este endpoint permite recuperar los datos del usuario a partir del token
+     * de sesión enviado en el header Authorization.
+     * URL:    http://localhost:8080/usuarios/me
+     * Metodo: GET
+     * Headers: Authorization: Bearer <token>
+     * @param token Token de sesión enviado en el header Authorization.
+     * @return ResponseEntity con los datos del usuario autenticado y código HTTP 200 (OK),
+     * o código HTTP 401 (Unauthorized) si el token es inválido o no se proporciona.
+     */
     @GetMapping("/me")
     fun getCurrentUser(
         @RequestHeader("Authorization") token: String?
@@ -69,17 +80,27 @@ class UsuarioController {
         }
         val cleanToken = token.replace("Bearer ", "").trim()
         val userFound = userService.findByToken(cleanToken)
-        if (userFound == null) {
-            return ResponseEntity.status(401).body("Token inválido")
+        return if (userFound != null) {
+            logger.info("Usuario autenticado: ${userFound.email}")
+            ResponseEntity.ok(
+                mapOf(
+                    "fotoPerfil" to userFound.fotoPerfil,
+                    "id" to userFound.id,
+                    "email" to userFound.email,
+                    "username" to userFound.username,
+                    "rol" to userFound.rol,
+                    "nombre" to userFound.nombre,
+                    "apellidoPaterno" to userFound.apellidoPaterno,
+                    "apellidoMaterno" to userFound.apellidoMaterno,
+                    "cp" to userFound.cp,
+                    "curp" to userFound.curp
+                )
+            )
+        } else {
+            logger.warn("Token inválido en /me")
+            ResponseEntity.status(401).body("Token inválido")
         }
-        val response = mapOf(
-            "id" to userFound.id,
-            "name" to userFound.nombre,
-            "email" to userFound.email
-        )
-        return ResponseEntity.ok(response)
     }
-
     /**
      * Función auxiliar para hash de contraseñas usando SHA-256. 
      * 
