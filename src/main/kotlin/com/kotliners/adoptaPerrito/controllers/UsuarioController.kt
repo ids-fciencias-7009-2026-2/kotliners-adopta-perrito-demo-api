@@ -59,19 +59,35 @@ class UsuarioController {
      */
     val activeTokens = mutableSetOf<String>()
 
-    /* 
     @GetMapping("/me")
-    fun retrieveUsuario(): ResponseEntity<Usuario> {
-        val usuarioFake = Usuario(
-            id = "1234",
-            nombre = "Aureliano Buendía",
-            email = "aureliano.buendia@gmail.com",
-            cp = "12345"
+    fun getCurrentUser(
+        @RequestHeader("Authorization") token: String?
+    ): ResponseEntity<Any> {
+
+        logger.info("Solicitud /me recibida con token: $token")
+
+        if (token == null) {
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+
+        // 🔥 LIMPIEZA CORRECTA DEL TOKEN
+        val cleanToken = token.replace("Bearer ", "").trim()
+
+        val userFound = userService.findByToken(cleanToken)
+
+        if (userFound == null) {
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+
+        val response = mapOf(
+            "id" to userFound.id,
+            "name" to userFound.nombre,
+            "email" to userFound.email,
+            "created_at" to userFound.createdAt
         )
-        logger.info("Usuario recuperado: $usuarioFake")
-        return ResponseEntity.ok(usuarioFake)
+
+        return ResponseEntity.ok(response)
     }
-    */
 
     /**
      * Función auxiliar para hash de contraseñas usando SHA-256. 
