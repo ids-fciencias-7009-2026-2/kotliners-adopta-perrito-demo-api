@@ -4,8 +4,10 @@ import com.kotliners.adoptaPerrito.domain.Usuario
 import com.kotliners.adoptaPerrito.domain.toUsuario
 import com.kotliners.adoptaPerrito.repositories.UsuarioRepository
 import com.kotliners.adoptaPerrito.repositories.toUsuarioEntity
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -30,5 +32,18 @@ class UsuarioService {
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
         return savedEntity.toUsuario()
+    }
+
+    /**
+     * Recupera todos los usuarios registrados en el sistema.
+     */
+    fun searchAllUsuarios(): List<Usuario> {
+        logger.info("Buscando todos los usuarios en la base de datos")
+        val usuarioEntities = usuarioRepository.findAll()
+        logger.info("Número de usuarios encontrados: ${usuarioEntities.count()}")
+        return usuarioEntities.map { usuarioEntity ->
+            logger.debug("Transformando UsuarioEntity con ID ${usuarioEntity.id} a Usuario")
+            usuarioEntity.toUsuario()
+        }
     }
 }
