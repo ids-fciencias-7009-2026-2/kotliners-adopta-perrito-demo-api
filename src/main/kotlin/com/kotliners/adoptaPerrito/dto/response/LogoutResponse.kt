@@ -9,7 +9,7 @@ data class LogoutResponse(
     /**
      * Identificador del usuario que cerro sesión.
      */
-    val userId: String,
+    val userId: Int?,
 
     /**
      * Fecha y hora en que se realizó el logout.

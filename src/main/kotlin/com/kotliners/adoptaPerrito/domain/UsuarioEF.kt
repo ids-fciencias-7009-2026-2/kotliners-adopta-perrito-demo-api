@@ -42,6 +42,7 @@ fun UsuarioEntity.toUsuario(): Usuario {
         apellidoMaterno = this.apellidoMaterno,
         email = this.email,
         cp = this.codigoPostal,
-        password = this.password
+        password = this.password,
+        token = this.token
     )
 }
