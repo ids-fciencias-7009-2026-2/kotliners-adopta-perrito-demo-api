@@ -36,21 +36,21 @@ data class UsuarioEntity(
      * CURP del usuario, debe ser único y no nulo.
      */
     @Column(name = "curp", unique = true, nullable = false, length = 18)
-    var curp: String,
+    var curp: String = "",
 
 
     /**
      * Nombre de usuario (username), debe ser único y no nulo.
      */
     @Column(name = "username", unique = true, nullable = false)
-    var username: String,
+    var username: String = "",
 
     /**
      * Rol del usuario (cuidador o adoptante), no nulo.
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
-    var rol: Rol,
+    var rol: Rol = Rol.ADOPTANTE, 
 
     /**
     * URL de la foto de perfil, puede ser nulo.
@@ -62,37 +62,37 @@ data class UsuarioEntity(
      * Nombre(s) del usuario, no nulo.
      */
     @Column(name = "nombres", nullable = false)
-    var nombres: String,
+    var nombres: String = "",
 
     /**
      * Apellido paterno del usuario, no nulo.
      */
     @Column(name = "apellido_paterno", nullable = false)
-    var apellidoPaterno: String,
+    var apellidoPaterno: String = "",
 
     /**
      * Apellido materno del usuario, no nulo.
      */
     @Column(name = "apellido_materno", nullable = false)
-    var apellidoMaterno: String,
+    var apellidoMaterno: String = "",
     
     /**
     * Correo electrónico del usuario, debe ser único y no nulo.
     */
     @Column(name = "email", unique = true, nullable = false)
-    var email: String,
+    var email: String = "",
 
     /**
      * Código postal del usuario, no nulo.
      */
     @Column(name = "codigo_postal", nullable = false)
-    var codigoPostal: String,
+    var codigoPostal: String = "",
 
     /**
     * Contraseña del usuario, no nulo.
     */
     @Column(name = "password", nullable = false)
-    var password: String,
+    var password: String = "",
 
     /**
     * Fecha de nacimiento del usuario, no nulo.
