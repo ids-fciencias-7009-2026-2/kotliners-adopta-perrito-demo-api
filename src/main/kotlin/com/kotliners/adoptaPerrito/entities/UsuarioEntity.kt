@@ -116,32 +116,4 @@ data class UsuarioEntity(
      */
     @Column(name = "token")
     var token: String? = null
-) {
-    /**
-     * Constructor sin parámetros requerido por JPA/Hibernate.
-     *
-     * Hibernate necesita este constructor para poder instanciar entidades
-     * durante las operaciones de carga desde la base de datos.
-     *
-     * Este constructor es obligatorio porque las data classes de Kotlin no generan
-     * automáticamente un constructor sin parámetros, pero JPA lo requiere para
-     * poder crear instancias de entidades mediante reflexión.
-     *
-     * Los valores por defecto aseguran que la entidad se cree en un estado válido
-     * incluso cuando Hibernate no proporciona valores iniciales.
-     */
-    constructor() : this(
-        id = null,
-        curp = "",
-        username = "",
-        rol = Rol.ADOPTANTE,
-        fotoPerfil = null,
-        nombres = "",
-        apellidoPaterno = "",
-        apellidoMaterno = "",
-        email = "",
-        codigoPostal = "",
-        password = "",
-        token = null
-    )
-}
+) 
