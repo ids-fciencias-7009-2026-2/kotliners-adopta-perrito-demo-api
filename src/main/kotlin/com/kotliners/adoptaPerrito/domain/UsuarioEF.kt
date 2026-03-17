@@ -1,6 +1,7 @@
 package com.kotliners.adoptaPerrito.domain
 
 import com.kotliners.adoptaPerrito.dto.request.CreateUsuarioRequest
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -13,8 +14,12 @@ fun CreateUsuarioRequest.toUsuario(): Usuario {
     return Usuario(
         id = "id-random-" + UUID.randomUUID().toString(),
         nombre = this.nombre,
+        apellidoPaterno = this.apellidoPaterno,
+        apellidoMaterno = this.apellidoMaterno,
         email = this.email,
-        cp = this.cp
+        cp = this.cp,
+        fechaNacimiento = LocalDate.parse(this.fechaNacimiento),
+        password = this.password
     )
 }
 

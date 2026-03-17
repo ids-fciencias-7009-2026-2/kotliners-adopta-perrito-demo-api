@@ -10,6 +10,16 @@ data class CreateUsuarioRequest(
     val nombre: String,
 
     /**
+     * Apellido paterno del usuario enviado por el cliente.
+     */
+    val apellidoPaterno: String,
+
+    /**
+     * Apellido materno del usuario enviado por el cliente.
+     */
+    val apellidoMaterno: String,
+
+    /**
      * Correo electrónico enviado por el cliente.
      */
     val email: String,
@@ -17,5 +27,15 @@ data class CreateUsuarioRequest(
     /**
      * Código postal enviado por el cliente.
      */
-    val cp: String
+    val cp: String,     
+
+    /**
+    * Fecha de nacimiento enviada por el cliente.
+    */
+    val fechaNacimiento: String,
+
+    /**
+     * Contraseña enviada por el cliente.
+     */
+    val password: String
 )
