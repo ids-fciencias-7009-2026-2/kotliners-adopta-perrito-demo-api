@@ -1,4 +1,4 @@
-package com.kotliners.adoptaPerrito.repository
+package com.kotliners.adoptaPerrito.repositories
 
 import com.kotliners.adoptaPerrito.entities.UsuarioEntity
 

@@ -10,41 +10,55 @@ data class Usuario (
     /**
      * Identificador único del usuario.
      */
-    val id: String,
+    val id: Int? = null,
 
     /**
-     * Nombre del usuario.
+     * CURP del usuario.
+     */
+    var curp: String,
+
+    /**
+     * Nombre de usuario (username).
+     */
+    var username: String,
+
+    /**
+     * Rol del usuario (cuidador o adoptante).
+     */
+    var rol: String,
+
+    /**
+     * URL de la foto de perfil.
+     */
+    var fotoPerfil: String? = null,
+
+    /**
+     * Nombre(s) del usuario.
      */
     var nombre: String,
 
     /**
-     * Apellido paterno del usuario.
+     * Apellido paterno.
      */
     var apellidoPaterno: String,
 
     /**
-     * Apellido materno del usuario.
+     * Apellido materno.
      */
     var apellidoMaterno: String,
 
     /**
-     * Correo electrónico del usuario.
+     * Correo electrónico.
      */
     var email: String,
 
     /**
-     * Código postal del usuario.
+     * Código postal.
      */
     var cp: String,
 
     /**
-     * Fecha de nacimiento del usuario.
-     */
-    var fechaNacimiento: LocalDate,
-
-    /**
-     * Contraseña del usuario.
+     * Contraseña.
      */
     var password: String? = null
-
-    )
+)

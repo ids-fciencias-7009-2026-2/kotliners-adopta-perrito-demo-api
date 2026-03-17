@@ -1,9 +1,12 @@
-package com.kotliners.adoptaPerrito.repository
+package com.kotliners.adoptaPerrito.repositories
 
 import com.kotliners.adoptaPerrito.domain.Usuario
 import com.kotliners.adoptaPerrito.entities.UsuarioEntity
 
 
+/**
+ * Función de extensión que convierte un Usuario de dominio a un UsuarioEntity para persistencia.
+ */
 fun Usuario.toUsuarioEntity(): UsuarioEntity {
     return UsuarioEntity(
         id = this.id,
