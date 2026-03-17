@@ -3,14 +3,13 @@ package com.kotliners.adoptaPerrito.entities
 import com.kotliners.adoptaPerrito.domain.Rol
 
 import jakarta.persistence.Column
+import jakarta.persistence.Entity
 import jakarta.persistence.Enumerated
 import jakarta.persistence.EnumType
-import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.time.LocalDate
 
 /**
  * Entidad que representa la tabla "Usuario" en la base de datos.
@@ -36,21 +35,21 @@ data class UsuarioEntity(
     /**
      * CURP del usuario, debe ser único y no nulo.
      */
-    @Column(name = "curp")
+    @Column(name = "curp", unique = true, nullable = false, length = 18)
     var curp: String,
 
 
     /**
      * Nombre de usuario (username), debe ser único y no nulo.
      */
-    @Column(name = "username")
+    @Column(name = "username", unique = true, nullable = false)
     var username: String,
 
     /**
      * Rol del usuario (cuidador o adoptante), no nulo.
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol")
+    @Column(name = "rol", nullable = false)
     var rol: Rol,
 
     /**
@@ -62,37 +61,37 @@ data class UsuarioEntity(
     /**
      * Nombre(s) del usuario, no nulo.
      */
-    @Column(name = "nombres")
+    @Column(name = "nombres", nullable = false)
     var nombres: String,
 
     /**
      * Apellido paterno del usuario, no nulo.
      */
-    @Column(name = "apellido_paterno")
+    @Column(name = "apellido_paterno", nullable = false)
     var apellidoPaterno: String,
 
     /**
      * Apellido materno del usuario, no nulo.
      */
-    @Column(name = "apellido_materno")
+    @Column(name = "apellido_materno", nullable = false)
     var apellidoMaterno: String,
     
     /**
     * Correo electrónico del usuario, debe ser único y no nulo.
     */
-    @Column(name = "email")
+    @Column(name = "email", unique = true, nullable = false)
     var email: String,
 
     /**
      * Código postal del usuario, no nulo.
      */
-    @Column(name = "codigo_postal")
+    @Column(name = "codigo_postal", nullable = false)
     var codigoPostal: String,
 
     /**
     * Contraseña del usuario, no nulo.
     */
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     var password: String,
 
     /**

@@ -27,7 +27,6 @@ class UsuarioService {
     fun addNewUsuario(usuario: Usuario): Usuario {
         logger.info("Agregando nuevo usuario: $usuario")
         val usuarioEntity = usuario.toUsuarioEntity()
-        // ToDO: validar credenciales
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
         return savedEntity.toUsuario()
