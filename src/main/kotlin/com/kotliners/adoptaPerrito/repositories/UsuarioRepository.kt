@@ -60,7 +60,9 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
      * @return UsuarioEntity si las credenciales coinciden, null en caso contrario
      */
     @Query("select u from UsuarioEntity u where u.email = :email and u.password = :password")
-    fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?    /**
+    fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?    
+    
+    /**
      * Actualiza el token de sesión de un usuario específico.
      *
      * Esta operación se utiliza durante el logout para invalidar la sesión

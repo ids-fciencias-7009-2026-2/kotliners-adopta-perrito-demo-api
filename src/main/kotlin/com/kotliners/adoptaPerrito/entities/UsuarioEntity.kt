@@ -24,11 +24,6 @@ import java.time.LocalDate
  *
  * Cada instancia de UsuarioEntity corresponde a exactamente un registro
  * en la tabla "Usuario" de la base de datos.
- *
- * NOTA IMPORTANTE: Esta entidad requiere un constructor sin parámetros
- * para que Hibernate pueda instanciarla durante las operaciones de carga
- * desde la base de datos. El constructor secundario al final de la clase
- * cumple esta función.
  */
 @Entity
 @Table(name = "Usuario")
