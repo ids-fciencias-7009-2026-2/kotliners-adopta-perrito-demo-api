@@ -97,6 +97,7 @@ class UsuarioService {
             logger.debug("Transformando UsuarioEntity con ID ${usuarioEntity.id} a Usuario")
             usuarioEntity.toUsuario()
         }
+    }
     
     /**
      * Realiza la validación de credenciales de un usuario.

@@ -65,16 +65,6 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
      */
     @Query("select u from UsuarioEntity u where u.curp = :curp")
     fun findByCurp(curp:String):UsuarioEntity?
-    
-    /**
-     * Busca un usuario por su correo electrónico y contraseña.
-     * 
-     * @param email El correo electrónico del usuario.
-     * @param password La contraseña del usuario.
-     * @return UsuarioEntity si existe, <code>null</code> en caso contrario.
-     */
-    @Query("select u from UsuarioEntity u where u.email = :email and u.password = :password")
-    fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?
 
     /**
      * Busca un usuario por su correo electrónico y contraseña hasheada.
@@ -85,7 +75,7 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
      *
      * @param email El correo electrónico del usuario
      * @param password La contraseña hasheada con SHA-256
-     * @return UsuarioEntity si las credenciales coinciden, null en caso contrario
+     * @return UsuarioEntity si las credenciales coinciden, <code>null</code> en caso contrario
      */
     @Query("select u from UsuarioEntity u where u.email = :email and u.password = :password")
     fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?   

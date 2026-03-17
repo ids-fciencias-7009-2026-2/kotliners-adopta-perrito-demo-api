@@ -97,13 +97,6 @@ data class UsuarioEntity(
     var email: String = "",
 
     /**
-     * Correo electrónico del usuario.
-     * Debe ser único y se utiliza para autenticación.
-     */
-    @Column(name = "email")
-    var email: String = "",
-
-    /**
      * Código postal asociado al usuario.
      */
     @Column(name = "codigo_postal", nullable = false)
