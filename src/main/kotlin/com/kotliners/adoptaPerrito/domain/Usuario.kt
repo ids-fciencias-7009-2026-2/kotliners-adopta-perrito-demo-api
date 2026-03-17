@@ -58,5 +58,10 @@ data class Usuario (
     /**
      * Contraseña.
      */
-    var password: String
+    var password: String,
+
+    /**
+     * Token de sesión del usuario.
+     */
+    var token: String? = null
 )

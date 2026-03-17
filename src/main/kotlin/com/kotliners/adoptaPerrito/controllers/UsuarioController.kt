@@ -5,8 +5,11 @@ import com.kotliners.adoptaPerrito.domain.toUsuario
 import com.kotliners.adoptaPerrito.dto.request.CreateUsuarioRequest
 import com.kotliners.adoptaPerrito.dto.request.LoginRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest
+import com.kotliners.adoptaPerrito.dto.response.RegisterResponse
 import com.kotliners.adoptaPerrito.dto.response.LogoutResponse
-import com.kotliners.adoptaPerrito.services.UsuarioService
+import com.kotliners.adoptaPerrito.dto.response.LoginResponse
+import com.kotliners.adoptaPerrito.services.UsuarioService      
+
 
 import java.security.MessageDigest
 
@@ -20,32 +23,42 @@ import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
 /**
- * Controlador encargado de exponer los endpoints REST relacionados 
- * con la gestión de usuarios.
+ * Controlador REST encargado de exponer los endpoints relacionados
+ * con la gestión de usuarios en el sistema de adopción de perros.
+ *
+ * Este controlador maneja las operaciones principales de:
+ * - Registro de nuevos usuarios
+ * - Autenticación (login/logout)
+ * - Gestión de sesiones mediante tokens
+ * - Información del usuario actual
+ *
+ * Utiliza Spring Web para mapear las peticiones HTTP a métodos específicos,
+ * y Spring Security concepts para la gestión de autenticación basada en tokens.
  */
 @RestController
-@RequestMapping("/usuarios") 
+@RequestMapping("/usuarios")
 class UsuarioController {
 
-    /* Logger para registrar eventos importantes del flujo de ejecución. */
+    /**
+     * Logger para registrar eventos importantes del controlador.
+     * Facilita el debugging y monitoreo del comportamiento de la API.
+     */
     private val logger: Logger = LoggerFactory.getLogger(UsuarioController::class.java)
 
-    /* Servicio de usuarios. */
+    /**
+     * Servicio de usuarios inyectado por Spring.
+     * Contiene toda la lógica de negocio para operaciones con usuarios.
+     */
     @Autowired
     lateinit var userService: UsuarioService
 
-    /* Conjunto de tokens activos. */
+    /**
+     * Conjunto de tokens activos en memoria.
+     * En una implementación de producción, esto debería estar en Redis o base de datos.
+     * Actualmente se usa para mantener un registro simple de sesiones activas.
+     */
     val activeTokens = mutableSetOf<String>()
 
-    /**
-     * Endpoint que devuelve la información del usuario autenticado.
-     * En esta versión de prueba se retorna un usuario "fake" con datos simulados.
-     * 
-     * URL:    http://localhost:8080/usuarios/me
-     * Metodo: GET
-     * 
-     * @Return ResponseEntity con un objeto Usuario y código HTTP 200 (OK).
-     */
     /* 
     @GetMapping("/me")
     fun retrieveUsuario(): ResponseEntity<Usuario> {
@@ -83,87 +96,128 @@ class UsuarioController {
      * Metodo: POST
      * 
      * @param createUsuarioRequest DTO que contiene los datos necesarios para crear un nuevo usuario.
-     * @Return ResponseEntity con el usuario creado y código HTTP 201 (Created).
+     * @Return ResponseEntity con la respuesta de registro y código HTTP 201 (Created).
      */
     @PostMapping("/register")
     fun agregaUsuario(
         @RequestBody createUsuarioRequest: CreateUsuarioRequest
-    ): ResponseEntity<Usuario> {
+    ): ResponseEntity<RegisterResponse> {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
         val hashedPassword = hashPassword(usuarioCreado.password)
         val usuarioConPasswordHash = usuarioCreado.copy(password = hashedPassword)
         val usuarioGuardado = userService.addNewUsuario(usuarioConPasswordHash)
         logger.info("Usuario registrado exitosamente: $usuarioGuardado")
-        return ResponseEntity.status(201).body(usuarioGuardado)
+        
+        val registerResponse = RegisterResponse(
+            usuario = usuarioGuardado,
+            mensaje = "Usuario registrado exitosamente"
+        )
+        
+        return ResponseEntity.status(201).body(registerResponse)
     }
 
     /**
-     * Endpoint para simula el proceso de autenticación de un usuario.
-     * Recibe un JSON con las credenciales (email y password) y verifica si coinciden
-     * con un usuario "fake" predefinido. 
-     * 
+     * Endpoint para el proceso de autenticación de un usuario.
+     *
+     * Este endpoint realiza el login del usuario mediante las siguientes operaciones:
+     * 1. Recibe las credenciales (email y password) en el cuerpo de la petición
+     * 2. Hashea la contraseña proporcionada usando SHA-256
+     * 3. Busca en la base de datos un usuario con email y contraseña hasheada coincidentes
+     * 4. Si encuentra coincidencia, genera un nuevo token de sesión y lo guarda
+     * 5. Retorna el token de sesión en caso de éxito, o error 401 si falla
+     *
+     * El token generado se utiliza para mantener la sesión activa y autorizar
+     * futuras peticiones sin necesidad de reautenticación.
+     *
      * URL:    http://localhost:8080/usuarios/login
-     * Metodo: POST
-     * 
-     * @param loginRequest DTO que contiene las credenciales de login (email y password).
-     * @Return ResponseEntity con un mensaje de éxito o error y código HTTP: 200 (OK) o 401 (Unauthorized).
+     * Método: POST
+     *
+     * @param loginRequest DTO que contiene las credenciales de login (email y password)
+     * @return ResponseEntity con LoginResponse (token) y código HTTP 200 (OK),
+     *         o código HTTP 401 (Unauthorized) si las credenciales son incorrectas
      */
-    /*
-    @PostMapping("/login")
+
+     @PostMapping("/login")
     fun login(
         @RequestBody loginRequest: LoginRequest
-    ): ResponseEntity<String> {
-        logger.info("Solicitud de login recibida: $loginRequest")
-        val usuarioFake = Usuario(
-            id = "1234",
-            nombre = "Aureliano Buendía",
-            email = "aureliano.buendia@gmail.com",
-            cp = "12345",
-            password = "macondo123"
-        )
-        return if (
-            loginRequest.email == usuarioFake.email &&
-            loginRequest.password == usuarioFake.password
-        ) {
-            logger.info("Login exitoso")
-            ResponseEntity.ok("Login exitoso")
+    ): ResponseEntity<Any> {
+
+        // Hashear la contraseña proporcionada para comparación con la BD
+        val passwordHash = hashPassword(loginRequest.password)
+        logger.info("Contraseña hasheada de la petición: $passwordHash")
+  
+        // Intentar autenticar al usuario con email y contraseña hasheada
+        val userFound = userService.login(loginRequest.email, passwordHash)
+
+        // Logging detallado para debugging
+        logger.info("Intento de login con: $loginRequest")
+        logger.info("Usuario encontrado: ${userFound != null}")
+        if (userFound != null) {
+            logger.info("Token generado para usuario: ${userFound.token}")
+        }
+
+        // Retornar respuesta apropiada según resultado de autenticación
+        return if (userFound != null) {
+            logger.info("Login exitoso para usuario: ${userFound.email}")
+            activeTokens.add(userFound.token.orEmpty())
+            ResponseEntity.ok(LoginResponse(userFound.token.orEmpty()))
         } else {
-            logger.warn("Login fallido")
-            ResponseEntity.status(401).body("Credenciales inválidas")
+            logger.warn("Login fallido para email: ${loginRequest.email}")
+            ResponseEntity.status(401).build()
         }
     }
-    */
 
     /**
-     * Endpoint para simular el proceso de logout de un usuario.
-     * 
-     * Genera una respuesta de éxito con un mensaje que incluye 
-     * el ID del usuario y la fecha/hora del logout.
-     * 
+     * Endpoint para el proceso de logout de un usuario.
+     *
+     * Este endpoint invalida la sesión activa del usuario mediante:
+     * 1. Recibe el token de autorización en el header Authorization
+     * 2. Valida que el token corresponda a un usuario existente
+     * 3. Limpia el token de la base de datos (lo establece como null)
+     * 4. Retorna confirmación de logout exitoso
+     *
+     * En una implementación de producción, también se debería:
+     * - Invalidar el token en un sistema de cache distribuido (Redis)
+     * - Registrar el evento de logout para auditoría
+     * - Limpiar cualquier estado de sesión adicional
+     *
      * URL:    http://localhost:8080/usuarios/logout
-     * Metodo: POST
-     * 
-     * @Return ResponseEntity con un mensaje de éxito y código HTTP 200 (OK).
+     * Método: POST
+     * Headers: Authorization: Bearer <token>
+     *
+     * @param token Token de sesión obtenido durante el login
+     * @return ResponseEntity con LogoutResponse y código HTTP 200 (OK),
+     *         o código HTTP 401 (Unauthorized) si el token es inválido
      */
-    /*
-    @PostMapping("/logout")
-    fun logout(): ResponseEntity<LogoutResponse> {
-        logger.info("Solicitud de logout recibida")
-        val usuarioFake = Usuario(
-            id = "1234",
-            nombre = "Aureliano Buendía",
-            email = "aureliano.buendia@gmail.com",
-            cp = "12345"
-        )
+
+     @PostMapping("/logout")
+    fun logout(
+        @RequestHeader("Authorization") token: String?
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud de logout recibida con token: ${token}...")
+       
+        // Validar que el token existe y corresponde a un usuario válido
+        val userFound = userService.findByToken(token.orEmpty())
+        if (token == null || userFound == null) {
+            logger.warn("Token inválido o usuario no encontrado para logout")
+            return ResponseEntity.status(401).build()
+        }
+
+        // Invalidar el token en la base de datos (ponerlo como null)
+        userService.invalidateToken(userFound.id)  
+        logger.info("Token invalidado para usuario: ${userFound.email}")
+        activeTokens.remove(token)
+
+        // Crear respuesta con el usuario real y timestamp actual
         val logoutResponse = LogoutResponse(
-            usuarioFake.id,
-            LocalDateTime.now().toString()
+            userId = userFound.id,  
+            logoutDateTime = LocalDateTime.now().toString()  
         )
-        logger.info("Logout exitoso para usuario: ${usuarioFake.id}")
+
         return ResponseEntity.ok(logoutResponse)
     }
-    */
+
 
     /**
      * Endpoint para actualizar la información de un usuario existente.

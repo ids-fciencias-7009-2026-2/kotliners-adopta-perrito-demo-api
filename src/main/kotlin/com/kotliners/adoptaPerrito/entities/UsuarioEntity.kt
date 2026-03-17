@@ -13,20 +13,30 @@ import jakarta.persistence.Table
 import java.time.LocalDate
 
 /**
- * Entidad que representa la tabla "Usuario" en la base de datos.
- * 
- * Cada instancia de UsuarioEntity corresponde a un registro en la tabla "Usuario".
- * 
- * Responsabilidades:
- * - Mapear los campos de la tabla "Usuario" a propiedades de la clase.
- * - Proporcionar una estructura para almacenar información de los usuarios del sistema.
+ * Entidad JPA que representa la tabla "Usuario" en la base de datos.
+ *
+ * Esta clase mapea directamente a la tabla de usuarios en PostgreSQL y utiliza
+ * las anotaciones de JPA/Hibernate para definir:
+ * - La estructura de la tabla y sus columnas
+ * - Las restricciones de integridad (unicidad, no nulos)
+ * - Las relaciones con otras entidades (si las hubiera)
+ * - La estrategia de generación de IDs
+ *
+ * Cada instancia de UsuarioEntity corresponde a exactamente un registro
+ * en la tabla "Usuario" de la base de datos.
+ *
+ * NOTA IMPORTANTE: Esta entidad requiere un constructor sin parámetros
+ * para que Hibernate pueda instanciarla durante las operaciones de carga
+ * desde la base de datos. El constructor secundario al final de la clase
+ * cumple esta función.
  */
 @Entity
 @Table(name = "Usuario")
 data class UsuarioEntity(
 
     /**
-     * Identificador único del usuario, generado automáticamente por la base de datos.
+     * Identificador único del usuario.
+     * Se genera automáticamente mediante la base de datos.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,70 +44,104 @@ data class UsuarioEntity(
     val id: Int? = null,
 
     /**
-     * CURP del usuario, debe ser único y no nulo.
+     * Clave Única de Registro de Población (CURP) del usuario.
+     * Debe ser única y no nula.
      */
     @Column(name = "curp")
-    var curp: String,
-
+    var curp: String = "",
 
     /**
-     * Nombre de usuario (username), debe ser único y no nulo.
+     * Nombre de usuario (username).
+     * Debe ser único dentro del sistema.
      */
     @Column(name = "username")
-    var username: String,
+    var username: String = "",
 
     /**
-     * Rol del usuario (cuidador o adoptante), no nulo.
+     * Rol del usuario dentro del sistema.
+     * Puede ser adoptante o cuidador.
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "rol")
-    var rol: Rol,
+    var rol: Rol = Rol.ADOPTANTE,
 
     /**
-    * URL de la foto de perfil, puede ser nulo.
-    */
+     * URL de la foto de perfil del usuario.
+     * Campo opcional.
+     */
     @Column(name = "foto_perfil")
     var fotoPerfil: String? = null,
 
     /**
-     * Nombre(s) del usuario, no nulo.
+     * Nombre(s) del usuario.
      */
     @Column(name = "nombres")
-    var nombres: String,
+    var nombres: String = "",
 
     /**
-     * Apellido paterno del usuario, no nulo.
+     * Apellido paterno del usuario.
      */
     @Column(name = "apellido_paterno")
-    var apellidoPaterno: String,
+    var apellidoPaterno: String = "",
 
     /**
-     * Apellido materno del usuario, no nulo.
+     * Apellido materno del usuario.
      */
     @Column(name = "apellido_materno")
-    var apellidoMaterno: String,
-    
-    /**
-    * Correo electrónico del usuario, debe ser único y no nulo.
-    */
-    @Column(name = "email")
-    var email: String,
+    var apellidoMaterno: String = "",
 
     /**
-     * Código postal del usuario, no nulo.
+     * Correo electrónico del usuario.
+     * Debe ser único y se utiliza para autenticación.
+     */
+    @Column(name = "email")
+    var email: String = "",
+
+    /**
+     * Código postal asociado al usuario.
      */
     @Column(name = "codigo_postal")
-    var codigoPostal: String,
+    var codigoPostal: String = "",
 
     /**
-    * Contraseña del usuario, no nulo.
-    */
+     * Contraseña del usuario.
+     * Se almacena de forma cifrada (hash), nunca en texto plano.
+     */
     @Column(name = "password")
-    var password: String,
+    var password: String = "",
 
     /**
-    * Fecha de nacimiento del usuario, no nulo.
-    */
+     * Token de sesión del usuario.
+     * Se utiliza para identificar sesiones activas.
+     */
     @Column(name = "token")
     var token: String? = null
-)
+) {
+    /**
+     * Constructor sin parámetros requerido por JPA/Hibernate.
+     *
+     * Hibernate necesita este constructor para poder instanciar entidades
+     * durante las operaciones de carga desde la base de datos.
+     *
+     * Este constructor es obligatorio porque las data classes de Kotlin no generan
+     * automáticamente un constructor sin parámetros, pero JPA lo requiere para
+     * poder crear instancias de entidades mediante reflexión.
+     *
+     * Los valores por defecto aseguran que la entidad se cree en un estado válido
+     * incluso cuando Hibernate no proporciona valores iniciales.
+     */
+    constructor() : this(
+        id = null,
+        curp = "",
+        username = "",
+        rol = Rol.ADOPTANTE,
+        fotoPerfil = null,
+        nombres = "",
+        apellidoPaterno = "",
+        apellidoMaterno = "",
+        email = "",
+        codigoPostal = "",
+        password = "",
+        token = null
+    )
+}
