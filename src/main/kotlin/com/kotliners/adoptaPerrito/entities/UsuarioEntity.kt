@@ -3,14 +3,13 @@ package com.kotliners.adoptaPerrito.entities
 import com.kotliners.adoptaPerrito.domain.Rol
 
 import jakarta.persistence.Column
+import jakarta.persistence.Entity
 import jakarta.persistence.Enumerated
 import jakarta.persistence.EnumType
-import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.time.LocalDate
 
 /**
  * Entidad JPA que representa la tabla "Usuario" en la base de datos.
@@ -42,14 +41,15 @@ data class UsuarioEntity(
      * Clave Única de Registro de Población (CURP) del usuario.
      * Debe ser única y no nula.
      */
-    @Column(name = "curp")
+    @Column(name = "curp", unique = true, nullable = false, length = 18)
     var curp: String = "",
+
 
     /**
      * Nombre de usuario (username).
      * Debe ser único dentro del sistema.
      */
-    @Column(name = "username")
+    @Column(name = "username", unique = true, nullable = false)
     var username: String = "",
 
     /**
@@ -57,8 +57,8 @@ data class UsuarioEntity(
      * Puede ser adoptante o cuidador.
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol")
-    var rol: Rol = Rol.ADOPTANTE,
+    @Column(name = "rol", nullable = false)
+    var rol: Rol = Rol.ADOPTANTE, 
 
     /**
      * URL de la foto de perfil del usuario.
@@ -70,39 +70,37 @@ data class UsuarioEntity(
     /**
      * Nombre(s) del usuario.
      */
-    @Column(name = "nombres")
+    @Column(name = "nombres", nullable = false)
     var nombres: String = "",
 
     /**
      * Apellido paterno del usuario.
      */
-    @Column(name = "apellido_paterno")
+    @Column(name = "apellido_paterno", nullable = false)
     var apellidoPaterno: String = "",
 
     /**
      * Apellido materno del usuario.
      */
-    @Column(name = "apellido_materno")
+    @Column(name = "apellido_materno", nullable = false)
     var apellidoMaterno: String = "",
-
+    
     /**
-     * Correo electrónico del usuario.
-     * Debe ser único y se utiliza para autenticación.
-     */
-    @Column(name = "email")
+    * Correo electrónico del usuario, debe ser único y no nulo.
+    */
+    @Column(name = "email", unique = true, nullable = false)
     var email: String = "",
 
     /**
      * Código postal asociado al usuario.
      */
-    @Column(name = "codigo_postal")
+    @Column(name = "codigo_postal", nullable = false)
     var codigoPostal: String = "",
 
     /**
-     * Contraseña del usuario.
-     * Se almacena de forma cifrada (hash), nunca en texto plano.
-     */
-    @Column(name = "password")
+    * Contraseña del usuario, no nulo.
+    */
+    @Column(name = "password", nullable = false)
     var password: String = "",
 
     /**

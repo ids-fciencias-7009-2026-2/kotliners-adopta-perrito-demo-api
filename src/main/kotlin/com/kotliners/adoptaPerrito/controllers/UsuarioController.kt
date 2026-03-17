@@ -79,7 +79,7 @@ class UsuarioController {
      * @param password Contraseña en texto plano.
      * @return Contraseña hasheada en formato hexadecimal.
      */
-    fun hashPassword(password: String): String {
+    private fun hashPassword(password: String): String {
         val bytes = MessageDigest
             .getInstance("SHA-256")
             .digest(password.toByteArray())
