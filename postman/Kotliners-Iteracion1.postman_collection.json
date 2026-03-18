@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "8b76846d-8c3f-4ba6-9382-4b357c1fe3aa",
+		"_postman_id": "654bcf60-c6e9-4522-970d-ab51b0664a11",
 		"name": "Kotliners-Iteracion1",
-		"description": "El sistema utiliza autenticación basada en tokens generados dinámamente al iniciar sesión, por lo que el token usado en la colección de Postman es solo un ejemplo y se debe reemplazar manualmente por uno válido generado en tu sistema.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"description": "El sistema utiliza autenticación basada en tokens generados dinámicamente al iniciar sesión, por lo que el token usado en la colección de Postman es solo un ejemplo y se debe reemplazar manualmente por uno válido generado en tu sistema.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "52637594",
-		"_collection_link": "https://jose-azr100-3571185.postman.co/workspace/78a048cd-2d3e-4527-8022-5ee7f56be5e6/collection/52637594-8b76846d-8c3f-4ba6-9382-4b357c1fe3aa?action=share&source=collection_link&creator=52637594"
+		"_collection_link": "https://jose-azr100-3571185.postman.co/workspace/78a048cd-2d3e-4527-8022-5ee7f56be5e6/collection/52637594-654bcf60-c6e9-4522-970d-ab51b0664a11?action=share&source=collection_link&creator=52637594"
 	},
 	"item": [
 		{
@@ -15,19 +15,117 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\",\n  \"password\": \"123456\"\n}",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://localhost:8080/usuarios/register"
+				"url": {
+					"raw": "http://localhost:8080/usuarios/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"register"
+					]
+				}
 			},
 			"response": []
 		},
 		{
-			"name": "Inicio de Sesión",
+			"name": "Registrar Usuario (datos duplicados)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Registrar Usuario (datos faltantes)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Registrar Usuario (datos invalidos)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https//foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antoniotest.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inicio de Sesión (credenciales incorrectas)",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -40,7 +138,76 @@
 						}
 					}
 				},
-				"url": "http://localhost:8080/usuarios/login"
+				"url": {
+					"raw": "http://localhost:8080/usuarios/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inicio de Sesión (datos inválidos)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"antoniotest.com\",\n  \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inicio de Sesión",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"antonio@test.com\",\n  \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"login"
+					]
+				}
 			},
 			"response": []
 		},
@@ -51,11 +218,74 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer 37ca81c9-5761-4ade-af38-f1162b7eb726",
+						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
 						"type": "text"
 					}
 				],
-				"url": "http://localhost:8080/usuarios/me"
+				"url": {
+					"raw": "http://localhost:8080/usuarios/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Consulta de información (usuario autenticado, token invalido)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer ",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/usuarios/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cierre de sesión (token inválido)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "123",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/usuarios/logout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"logout"
+					]
+				}
 			},
 			"response": []
 		},
@@ -66,11 +296,22 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "37ca81c9-5761-4ade-af38-f1162b7eb726",
+						"value": "a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
 						"type": "text"
 					}
 				],
-				"url": "http://localhost:8080/usuarios/logout"
+				"url": {
+					"raw": "http://localhost:8080/usuarios/logout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"logout"
+					]
+				}
 			},
 			"response": []
 		},
@@ -81,11 +322,22 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer 37ca81c9-5761-4ade-af38-f1162b7eb726",
+						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
 						"type": "text"
 					}
 				],
-				"url": "http://localhost:8080/usuarios/me"
+				"url": {
+					"raw": "http://localhost:8080/usuarios/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"me"
+					]
+				}
 			},
 			"response": []
 		}
