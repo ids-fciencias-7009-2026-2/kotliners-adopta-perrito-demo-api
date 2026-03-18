@@ -20,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
+
+import jakarta.validation.Valid
+
 import java.time.LocalDateTime
 
 /**
@@ -128,7 +131,7 @@ class UsuarioController {
      */
     @PostMapping("/register")
     fun agregaUsuario(
-        @RequestBody createUsuarioRequest: CreateUsuarioRequest
+        @Valid @RequestBody createUsuarioRequest: CreateUsuarioRequest
     ): ResponseEntity<RegisterResponse> {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
@@ -168,7 +171,7 @@ class UsuarioController {
 
      @PostMapping("/login")
     fun login(
-        @RequestBody loginRequest: LoginRequest
+        @Valid @RequestBody loginRequest: LoginRequest
     ): ResponseEntity<Any> {
 
         // Hashear la contraseña proporcionada para comparación con la BD
@@ -192,7 +195,7 @@ class UsuarioController {
             ResponseEntity.ok(LoginResponse(userFound.token.orEmpty()))
         } else {
             logger.warn("Login fallido para email: ${loginRequest.email}")
-            ResponseEntity.status(401).build()
+            ResponseEntity.status(401).body("Credenciales incorrectas")
         }
     }
 
@@ -229,7 +232,7 @@ class UsuarioController {
         val userFound = userService.findByToken(token.orEmpty())
         if (token == null || userFound == null) {
             logger.warn("Token inválido o usuario no encontrado para logout")
-            return ResponseEntity.status(401).build()
+            return ResponseEntity.status(401).body("Token inválido")
         }
 
         // Invalidar el token en la base de datos (ponerlo como null)

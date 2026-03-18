@@ -1,5 +1,8 @@
 package com.kotliners.adoptaPerrito.dto.request
 
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+
 /**
  * DTO (Data Transfer Object) utilizado para recibir las credenciales de autenticación
  * de un usuario cuando intenta iniciar sesión en el sistema.
@@ -18,6 +21,8 @@ data class LoginRequest(
      * Debe existir en la base de datos y ser único por usuario.
      * Se utiliza como identificador principal para la búsqueda del usuario.
      */
+    @field:NotBlank(message = "Por favor, ingresa tu correo electrónico.")
+    @field:Email(message = "Por favor, ingresa un correo electrónico válido.")
     val email: String,
 
     /**
@@ -25,5 +30,6 @@ data class LoginRequest(
      * Esta contraseña será hasheada con SHA-256 antes de compararse
      * con el hash almacenado en la base de datos.
      */
+    @field:NotBlank(message = "Por favor, ingresa tu contraseña.")
     val password: String
 )

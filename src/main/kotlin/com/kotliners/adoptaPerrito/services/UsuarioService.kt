@@ -43,7 +43,7 @@ class UsuarioService {
     lateinit var usuarioRepository: UsuarioRepository
 
     /**
-     * Valida que el usuario no tenga datos duplicados en la base de datos.
+     * Valida que el usuario no tenga datos duplicados en la base de datos, como email, username o CURP.
      * 
      * @param usuarioEntity La entidad de usuario a validar.
      * @throws IllegalArgumentException si el usuario tiene datos duplicados.
