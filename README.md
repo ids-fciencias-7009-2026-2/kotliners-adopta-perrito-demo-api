@@ -1,42 +1,41 @@
-# Práctica 2
+# Colitas Felices - Backend
 Kotliners
+
+## Estructura del repositorio
+```
+/src
+/postman
+/database
+    schema.sql
+/README.md
+```
 
 ## Pasos para el levantamiento del proyecto
 
-1. Verifica que PostgreSQL esté activo
+### 1. Verificar que PostgreSQL esté activo
+Asegúrate de tener PostgreSQL corriendo en tu máquina.
+
+### 2. Construir la base de datos con schema.sql
+Ejecuta el script principal para crear todas las tablas desde cero:
 ```sh
-systemctl status postgresql
+psql -U postgres -f database/schema.sql
 ```
-2. Entra a Postgres `sudo -u postgres psql` y crea la base de datos en PostgreSQL con el script
+Este archivo contiene toda la estructura de la base de datos y puede ejecutarse en cualquier computadora.
+
+### 3. Configurar variables de entorno
+Copia el archivo de ejemplo y completa tus datos:
 ```sh
-CREATE USER <USER_DB> WITH PASSWORD '<PASSWORD_DB>';
-CREATE DATABASE adopciones_db OWNER <USER_DB>;
-\q
+cp .env.example .env
 ```
-3. Agrega la tabla Usuario a la base de datos con el script [usuario.sql](database/usuario.sql)
+Edita `.env` con tus credenciales:
+```
+URL_DB=localhost:5432/colitas_db
+USER_DB=postgres
+PASSWORD_DB=tu_password
+```
+
+### 4. Levantar el proyecto
 ```sh
-psql -U <USER_DB> -d adopciones_db -f database/usuario.sql
+./mvnw spring-boot:run
 ```
-
-![Agregando tabla usuario](assets/agregaTablaUsuario.png)
-
-Verificamos su creación con 
-
-```sh
-psql -U <USER_DB> -d adopciones_db
-\dt
-\d usuario
-\q
-```
-![Tabla usuario](assets/tablaUsuario.png)
-
-4. Asegurate de completar tus variables de entorno en tu archivo `.env`, tomando como guía el archivo `.env.example`
-
-5. Verificar conexión sin errores al levantar el proyecto
-
-```sh
-mvn spring-boot:run
-```
-![Verificar conexión](assets/conexion.png)
-
-Verificamos que Hikari logró entrar a PostgreSQL con las credenciales proporcionadas
+Verifica que aparezca `Started AdoptaPerritoApplicationKt` en la consola.
