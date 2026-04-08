@@ -251,38 +251,40 @@ class UsuarioController {
 
 
     /**
-     * Endpoint para actualizar la información de un usuario existente.
-     * 
-     * Permite modificar campos como el email o la contraseña. Recibe un JSON con los datos a actualizar
-     * y retorna el usuario actualizado.
-     * 
+     * Endpoint para actualizar la información del usuario autenticado.
+     *
+     * Recibe el token en el header Authorization para identificar al usuario,
+     * y un JSON con los campos a actualizar.
+     *
      * URL:    http://localhost:8080/usuarios
-     * Metodo: PUT
-     * 
-     * @param updateUsuarioRequest DTO que contiene los datos a actualizar (email, password).
-     * @Return ResponseEntity con el usuario actualizado y código HTTP 200 (OK).
+     * Método: PUT
+     * Headers: Authorization: Bearer <token>
+     *
+     * @param token Token de sesión del usuario autenticado
+     * @param updateUsuarioRequest DTO con los datos a actualizar
+     * @return ResponseEntity con el usuario actualizado y código HTTP 200 (OK)
      */
-    /*
     @PutMapping
     fun updateUsuario(
+        @RequestHeader("Authorization") token: String?,
         @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
-    ): ResponseEntity<Usuario> {
-        logger.info("Solicitud de actualización recibida: $updateUsuarioRequest")
-        val usuarioFake = Usuario(
-            id = "1234",
-            nombre = "Aureliano Buendía",
-            email = "aureliano.buendia@gmail.com",
-            cp = "12345",
-            password = "macondo123"
-        )
-        logger.info("Usuario encontrado: $usuarioFake")
-        val usuarioActualizado = usuarioFake.copy(
-            cp = updateUsuarioRequest.cp, 
-            email = updateUsuarioRequest.email,
-            password = updateUsuarioRequest.password
-        )
-        logger.info("Usuario actualizado: $usuarioActualizado")
-        return ResponseEntity.ok(usuarioActualizado)
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud de actualización recibida")
+        if (token == null) {
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+        if (userFound == null) {
+            logger.warn("Token inválido en PUT /usuarios")
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+        val usuarioActualizado = userService.updateUsuario(userFound.id!!, updateUsuarioRequest)
+        return if (usuarioActualizado != null) {
+            logger.info("Usuario actualizado exitosamente: ${usuarioActualizado.id}")
+            ResponseEntity.ok(usuarioActualizado)
+        } else {
+            ResponseEntity.status(404).body("Usuario no encontrado")
+        }
     }
-    */
 }

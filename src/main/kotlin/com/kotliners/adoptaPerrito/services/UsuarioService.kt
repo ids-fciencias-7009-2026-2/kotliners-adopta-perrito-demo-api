@@ -3,7 +3,9 @@ package com.kotliners.adoptaPerrito.services
 import com.kotliners.adoptaPerrito.domain.Usuario
 import com.kotliners.adoptaPerrito.domain.toUsuario
 import com.kotliners.adoptaPerrito.entities.UsuarioEntity
+import com.kotliners.adoptaPerrito.entities.CodigoPostalEntity
 import com.kotliners.adoptaPerrito.repositories.UsuarioRepository
+import com.kotliners.adoptaPerrito.repositories.CodigoPostalRepository
 import com.kotliners.adoptaPerrito.repositories.toUsuarioEntity
 
 import org.slf4j.Logger
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 import java.util.UUID
+import java.time.LocalDateTime
 
 /**
  * Servicio de negocio para la gestión de usuarios en el sistema de adopción de perros.
@@ -37,10 +40,48 @@ class UsuarioService {
 
     /**
      * Repositorio de usuarios inyectado por Spring.
-     * Proporciona acceso a las operaciones CRUD de la base de datos.
      */
     @Autowired
     lateinit var usuarioRepository: UsuarioRepository
+
+    /**
+     * Repositorio de códigos postales inyectado por Spring.
+     */
+    @Autowired
+    lateinit var codigoPostalRepository: CodigoPostalRepository
+
+    /**
+     * Traduce un código postal a coordenadas geográficas.
+     * TBD: traducir CP a coordenadas reales usando una API de geocodificación.
+     * Por ahora retorna coordenadas mock del centro de CDMX.
+     *
+     * @param cp Código postal de 5 dígitos
+     * @return Par (latitud, longitud)
+     */
+    private fun translateCpToCoords(cp: String): Pair<java.math.BigDecimal, java.math.BigDecimal> {
+        // TBD: traducir CP a coordenadas usando API externa (como Google Maps Geocoding API)
+        return Pair(java.math.BigDecimal("19.432608"), java.math.BigDecimal("-99.133209"))
+    }
+
+    /**
+     * Verifica que el código postal exista en la tabla codigo_postal.
+     * Si no existe, lo crea usando [translateCpToCoords] para obtener las coordenadas.
+     *
+     * @param cp Código postal de 5 dígitos
+     */
+    private fun ensureCodigoPostalExists(cp: String) {
+        if (!codigoPostalRepository.existsById(cp)) {
+            logger.info("CP $cp no encontrado, creando con coordenadas mock")
+            val (latitud, longitud) = translateCpToCoords(cp)
+            codigoPostalRepository.save(
+                com.kotliners.adoptaPerrito.entities.CodigoPostalEntity(
+                    cp = cp,
+                    latitud = latitud,
+                    longitud = longitud
+                )
+            )
+        }
+    }
 
     /**
      * Valida que el usuario no tenga datos duplicados en la base de datos, como email, username o CURP.
@@ -79,6 +120,7 @@ class UsuarioService {
         logger.info("Agregando nuevo usuario: $usuario")
         val usuarioEntity = usuario.toUsuarioEntity()
         validateUsuario(usuarioEntity)
+        ensureCodigoPostalExists(usuarioEntity.codigoPostal)
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
         return savedEntity.toUsuario()
@@ -178,5 +220,31 @@ class UsuarioService {
         }
         usuarioRepository.updateTokenById(userId, null)
         logger.info("Token invalidado para usuario ID: $userId")
+    }
+
+    /**
+     * Actualiza la información de un usuario autenticado.
+     *
+     * Solo actualiza los campos que vienen en el request (parcial).
+     * No permite cambiar curp, username ni token.
+     *
+     * @param userId ID del usuario a actualizar
+     * @param request DTO con los campos a actualizar
+     * @return El usuario actualizado, o null si no existe
+     */
+    fun updateUsuario(userId: Int, request: com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest): Usuario? {
+        logger.info("Actualizando usuario ID: $userId")
+        val entity = usuarioRepository.findById(userId).orElse(null) ?: return null
+        entity.nombres = request.nombres
+        entity.apellidoPaterno = request.apellidoPaterno
+        entity.apellidoMaterno = request.apellidoMaterno
+        entity.email = request.email
+        ensureCodigoPostalExists(request.codigoPostal)
+        entity.codigoPostal = request.codigoPostal
+        if (request.fotoPerfil != null) entity.fotoPerfil = request.fotoPerfil
+        entity.fechaUpdate = LocalDateTime.now()
+        val saved = usuarioRepository.save(entity)
+        logger.info("Usuario actualizado: ${saved.id}")
+        return saved.toUsuario()
     }
 }

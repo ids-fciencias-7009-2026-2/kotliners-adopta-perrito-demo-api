@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.time.LocalDateTime
 
 /**
  * Entidad JPA que representa la tabla "usuario" en la base de datos.
@@ -68,5 +69,13 @@ data class UsuarioEntity(
 
     /** Token de sesión activo (null si no hay sesión) */
     @Column(name = "token")
-    var token: String? = null
+    var token: String? = null,
+
+    /** Fecha de última actualización del perfil */
+    @Column(name = "fecha_update")
+    var fechaUpdate: LocalDateTime? = null,
+
+    /** Fecha de registro del usuario */
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
+    val fechaRegistro: LocalDateTime = LocalDateTime.now()
 )
