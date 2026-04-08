@@ -18,7 +18,7 @@ data class CreateUsuarioRequest(
      * Nombre del usuario enviado por el cliente.
      */
     @field:NotBlank(message = "Por favor, ingresa tu nombre.")
-    val nombre: String,
+    val nombres: String,
 
     /**
      * CURP del usuario enviado por el cliente.
@@ -69,7 +69,7 @@ data class CreateUsuarioRequest(
      */
     @field:NotBlank(message = "Por favor, ingresa tu código postal.")
     @field:Pattern(regexp = "^\\d{5}$", message = "Por favor, ingresa un código postal válido.")
-    val cp: String,     
+    val codigoPostal: String,     
 
     /**
      * Contraseña enviada por el cliente.

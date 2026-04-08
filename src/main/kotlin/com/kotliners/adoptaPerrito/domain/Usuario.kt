@@ -3,65 +3,41 @@ package com.kotliners.adoptaPerrito.domain
 /**
  * Modelo de dominio que representa a un usuario del sistema de adopción.
  */
-data class Usuario (
+data class Usuario(
 
-    /**
-     * Identificador único del usuario.
-     */
+    /** Identificador único del usuario */
     val id: Int? = null,
 
-    /**
-     * CURP del usuario.
-     */
+    /** Clave Única de Registro de Población */
     var curp: String,
 
-    /**
-     * Nombre de usuario (username).
-     */
+    /** Nombre de usuario único */
     var username: String,
 
-    /**
-     * Rol del usuario (cuidador o adoptante).
-     */
+    /** Rol del usuario: ADOPTANTE o CUIDADOR */
     var rol: Rol,
 
-    /**
-     * URL de la foto de perfil.
-     */
+    /** URL de la foto de perfil (opcional) */
     var fotoPerfil: String? = null,
 
-    /**
-     * Nombre(s) del usuario.
-     */
-    var nombre: String,
+    /** Nombre(s) del usuario */
+    var nombres: String,
 
-    /**
-     * Apellido paterno.
-     */
+    /** Apellido paterno */
     var apellidoPaterno: String,
 
-    /**
-     * Apellido materno.
-     */
+    /** Apellido materno */
     var apellidoMaterno: String,
 
-    /**
-     * Correo electrónico.
-     */
+    /** Correo electrónico */
     var email: String,
 
-    /**
-     * Código postal.
-     */
-    var cp: String,
+    /** Código postal */
+    var codigoPostal: String,
 
-    /**
-     * Contraseña.
-     */
+    /** Contraseña hasheada */
     var password: String,
 
-    /**
-     * Token de sesión del usuario.
-     */
+    /** Token de sesión activo */
     var token: String? = null
 )
