@@ -12,84 +12,61 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 
 /**
- * Entidad JPA que representa la tabla "Usuario" en la base de datos.
+ * Entidad JPA que representa la tabla "usuario" en la base de datos.
+ * Los nombres de columna y variables coinciden en todas las capas.
  */
 @Entity
 @Table(name = "usuario")
 data class UsuarioEntity(
 
-    /**
-     * Identificador único del usuario.
-     */
+    /** Identificador único del usuario */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "usuario_id")
     val id: Int? = null,
 
-    /**
-     * Clave Única de Registro de Población (CURP).
-     */
+    /** Clave Única de Registro de Población */
     @Column(name = "curp", unique = true, nullable = false, length = 18)
     var curp: String = "",
 
-    /**
-     * Nombre de usuario (username).
-     */
+    /** Nombre de usuario único en el sistema */
     @Column(name = "username", unique = true, nullable = false)
     var username: String = "",
 
-    /**
-     * Rol del usuario dentro del sistema.
-     */
+    /** Rol del usuario: ADOPTANTE o CUIDADOR */
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
     var rol: Rol = Rol.ADOPTANTE,
 
-    /**
-     * URL de la foto de perfil del usuario.
-     */
+    /** URL de la foto de perfil (opcional) */
     @Column(name = "foto_perfil")
     var fotoPerfil: String? = null,
 
-    /**
-     * Nombre(s) del usuario.
-     */
+    /** Nombre(s) del usuario */
     @Column(name = "nombres", nullable = false)
     var nombres: String = "",
 
-    /**
-     * Apellido paterno del usuario.
-     */
+    /** Apellido paterno del usuario */
     @Column(name = "apellido_paterno", nullable = false)
     var apellidoPaterno: String = "",
 
-    /**
-     * Apellido materno del usuario.
-     */
+    /** Apellido materno del usuario */
     @Column(name = "apellido_materno", nullable = false)
     var apellidoMaterno: String = "",
 
-    /**
-     * Correo electrónico del usuario.
-     */
+    /** Correo electrónico único del usuario */
     @Column(name = "email", unique = true, nullable = false)
     var email: String = "",
 
-    /**
-     * Código postal asociado al usuario.
-     */
-    @Column(name = "codigo_postal", nullable = false)
+    /** Código postal del usuario (FK a tabla codigo_postal) */
+    @Column(name = "codigo_postal", nullable = false, length = 5)
     var codigoPostal: String = "",
 
-    /**
-     * Contraseña del usuario hasheada con SHA-256.
-     */
+    /** Contraseña hasheada con SHA-256 */
     @Column(name = "password", nullable = false)
     var password: String = "",
 
-    /**
-     * Token de sesión del usuario.
-     */
+    /** Token de sesión activo (null si no hay sesión) */
     @Column(name = "token")
     var token: String? = null
 )

@@ -92,10 +92,10 @@ class UsuarioController {
                     "email" to userFound.email,
                     "username" to userFound.username,
                     "rol" to userFound.rol,
-                    "nombre" to userFound.nombre,
+                    "nombres" to userFound.nombres,
                     "apellidoPaterno" to userFound.apellidoPaterno,
                     "apellidoMaterno" to userFound.apellidoMaterno,
-                    "cp" to userFound.cp,
+                    "codigoPostal" to userFound.codigoPostal,
                     "curp" to userFound.curp
                 )
             )
