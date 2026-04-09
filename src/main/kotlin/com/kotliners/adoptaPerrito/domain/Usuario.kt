@@ -6,7 +6,7 @@ package com.kotliners.adoptaPerrito.domain
 data class Usuario(
 
     /** Identificador único del usuario */
-    val id: Int? = null,
+    val id: String? = null,
 
     /** Clave Única de Registro de Población */
     var curp: String,

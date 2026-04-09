@@ -34,7 +34,7 @@ INSERT INTO codigo_postal (cp, latitud, longitud) VALUES ('00000', 19.432608, -9
 DROP TABLE IF EXISTS usuario CASCADE;
 
 CREATE TABLE usuario (
-    usuario_id       SERIAL        PRIMARY KEY,
+    usuario_id       UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     curp             VARCHAR(18)   NOT NULL UNIQUE,
     username         VARCHAR(50)   NOT NULL UNIQUE,
     foto_perfil      TEXT,
@@ -48,6 +48,7 @@ CREATE TABLE usuario (
     rol              rol_enum      NOT NULL,
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_update     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    fecha_eliminado  TIMESTAMP,
     FOREIGN KEY (codigo_postal) REFERENCES codigo_postal(cp)
 );
 
@@ -60,7 +61,7 @@ DROP TABLE IF EXISTS accion CASCADE;
 
 CREATE TABLE accion (
     act_id     SERIAL  PRIMARY KEY,
-    usuario_id INT,
+    usuario_id UUID,
     accion     TEXT    NOT NULL,
     fecha      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id) ON DELETE SET NULL
@@ -80,7 +81,7 @@ CREATE TABLE animal (
     sexo            sexo_enum     NOT NULL,
     descripcion     TEXT          NOT NULL,
     estatus         estatus_enum  NOT NULL,
-    usuario_id      INT           NOT NULL,
+    usuario_id      UUID          NOT NULL,
     fecha_registro  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     inapropiado     BOOLEAN       DEFAULT FALSE,
     esterilizado    BOOLEAN       DEFAULT FALSE,
@@ -140,9 +141,8 @@ CREATE TABLE animal_vacuna (
 DROP TABLE IF EXISTS usuario_interes CASCADE;
 
 CREATE TABLE usuario_interes (
-    usuario_id INT       NOT NULL,
-    animal_id  INT       NOT NULL,
-    fecha      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    usuario_id UUID      NOT NULL,
+    animal_id  INT       NOT NULL,    fecha      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (usuario_id, animal_id),
     FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id),
     FOREIGN KEY (animal_id)  REFERENCES animal(animal_id) ON DELETE CASCADE
