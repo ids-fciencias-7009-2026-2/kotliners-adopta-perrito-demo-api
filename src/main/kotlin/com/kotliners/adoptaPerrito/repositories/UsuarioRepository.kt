@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import jakarta.transaction.Transactional
+import java.util.UUID
 
 /**
  * Repositorio JPA para la entidad UsuarioEntity.
@@ -23,7 +24,7 @@ import jakarta.transaction.Transactional
  * - Actualizar tokens de sesión de usuarios
  * - Proporcionar acceso tipado a operaciones de base de datos
  */
-interface UsuarioRepository:CrudRepository<UsuarioEntity,String> {
+interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
 
     /**
      * Busca un usuario por su token de sesión.
@@ -99,5 +100,5 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,String> {
     @Modifying
     @Transactional
     @Query("update UsuarioEntity u set u.token = :token where u.id = :id")
-    fun updateTokenById(id: String?, token: String?)
+    fun updateTokenById(id: UUID?, token: String?)
 }

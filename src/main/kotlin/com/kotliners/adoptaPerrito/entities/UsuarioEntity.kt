@@ -10,10 +10,10 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.UuidGenerator
 import java.time.LocalDateTime
+import java.util.UUID
 
 /**
  * Entidad JPA que representa la tabla "usuario" en la base de datos.
- * Los nombres de columna y variables coinciden en todas las capas.
  */
 @Entity
 @Table(name = "usuario")
@@ -22,8 +22,8 @@ data class UsuarioEntity(
     /** Identificador único del usuario (UUID generado automáticamente) */
     @Id
     @UuidGenerator
-    @Column(name = "usuario_id", columnDefinition = "uuid", updatable = false, nullable = false)
-    val id: String? = null,
+    @Column(name = "usuario_id", updatable = false, nullable = false)
+    val id: UUID? = null,
 
     /** Clave Única de Registro de Población */
     @Column(name = "curp", unique = true, nullable = false, length = 18)
@@ -58,7 +58,7 @@ data class UsuarioEntity(
     @Column(name = "email", unique = true, nullable = false)
     var email: String = "",
 
-    /** Código postal del usuario (FK a tabla codigo_postal) */
+    /** Código postal del usuario */
     @Column(name = "codigo_postal", nullable = false, length = 5)
     var codigoPostal: String = "",
 
@@ -78,7 +78,7 @@ data class UsuarioEntity(
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     val fechaRegistro: LocalDateTime = LocalDateTime.now(),
 
-    /** Fecha de eliminación lógica (soft delete) — null si el usuario está activo */
+    /** Fecha de eliminación lógica (soft delete) */
     @Column(name = "fecha_eliminado")
     var fechaEliminado: LocalDateTime? = null
 )
