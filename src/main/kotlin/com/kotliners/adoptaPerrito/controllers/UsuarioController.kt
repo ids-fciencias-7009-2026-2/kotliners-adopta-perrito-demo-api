@@ -242,7 +242,7 @@ class UsuarioController {
     @PutMapping
     fun updateUsuario(
         @RequestHeader("Authorization", required = false) token: String?,
-        @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
+        @RequestBody  @Valid updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Any> {
         logger.info("Solicitud de actualización recibida")
         if (token == null) return ResponseEntity.status(401).body("Token requerido")
