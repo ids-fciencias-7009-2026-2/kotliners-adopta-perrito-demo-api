@@ -6,8 +6,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Enumerated
 import jakarta.persistence.EnumType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.UuidGenerator
@@ -24,7 +22,7 @@ data class UsuarioEntity(
     /** Identificador único del usuario (UUID generado automáticamente) */
     @Id
     @UuidGenerator
-    @Column(name = "usuario_id", updatable = false, nullable = false)
+    @Column(name = "usuario_id", columnDefinition = "uuid", updatable = false, nullable = false)
     val id: String? = null,
 
     /** Clave Única de Registro de Población */

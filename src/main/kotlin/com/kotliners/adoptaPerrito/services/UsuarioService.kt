@@ -123,9 +123,9 @@ class UsuarioService {
         ensureCodigoPostalExists(usuarioEntity.codigoPostal)
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
-        val usuario = savedEntity.toUsuario()
-        usuario.password = "****"  // Ocultar contraseña antes de retornar
-        return usuario
+        val usuarioGuardado = savedEntity.toUsuario()
+        usuarioGuardado.password = "****"  // Ocultar contraseña antes de retornar
+        return usuarioGuardado
     }
 
     /**

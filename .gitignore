@@ -40,3 +40,5 @@ replay_pid*.log
 *.log
 *.tmp
 *.temp
+##
+src/test/*
