@@ -254,7 +254,7 @@ class UsuarioController {
             return ResponseEntity.status(401).body("Token inválido")
         }
 
-        val usuarioActualizado = userService.updateUsuario(userFound.id!!, updateUsuarioRequest)
+        val usuarioActualizado = userService.updateUsuario(userFound.id ?: return ResponseEntity.status(401).body("Token inválido"), updateUsuarioRequest)
         return if (usuarioActualizado != null) {
             logger.info("Usuario actualizado: ${usuarioActualizado.id}")
             ResponseEntity.ok(usuarioActualizado)
