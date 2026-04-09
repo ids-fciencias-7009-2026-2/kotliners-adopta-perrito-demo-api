@@ -27,7 +27,7 @@ fun CreateUsuarioRequest.toUsuario(): Usuario {
  */
 fun UsuarioEntity.toUsuario(): Usuario {
     return Usuario(
-        id = this.id,
+        id = this.id?.toString(),  
         curp = this.curp,
         username = this.username,
         rol = this.rol,
