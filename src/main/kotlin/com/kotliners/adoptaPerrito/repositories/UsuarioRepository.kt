@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
+import jakarta.transaction.Transactional
 
 /**
  * Repositorio JPA para la entidad UsuarioEntity.
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional
  * - Actualizar tokens de sesión de usuarios
  * - Proporcionar acceso tipado a operaciones de base de datos
  */
-interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
+interface UsuarioRepository:CrudRepository<UsuarioEntity,String> {
 
     /**
      * Busca un usuario por su token de sesión.
@@ -99,5 +99,5 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,Int> {
     @Modifying
     @Transactional
     @Query("update UsuarioEntity u set u.token = :token where u.id = :id")
-    fun updateTokenById(id: Int?, token: String?)
+    fun updateTokenById(id: String?, token: String?)
 }

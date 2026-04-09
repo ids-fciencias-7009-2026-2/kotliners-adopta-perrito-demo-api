@@ -123,7 +123,9 @@ class UsuarioService {
         ensureCodigoPostalExists(usuarioEntity.codigoPostal)
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
-        return savedEntity.toUsuario()
+        val usuario = savedEntity.toUsuario()
+        usuario.password = "****"  // Ocultar contraseña antes de retornar
+        return usuario
     }
 
     /**
@@ -213,7 +215,7 @@ class UsuarioService {
      * 
      * @param userId ID del usuario cuya sesión se va a invalidar (puede ser null)
      */
-    fun invalidateToken(userId: Int?) {
+    fun invalidateToken(userId: String?) {
         if (userId == null) {
             logger.warn("Intento de invalidar token con ID null")
             return
@@ -232,7 +234,7 @@ class UsuarioService {
      * @param request DTO con los campos a actualizar
      * @return El usuario actualizado, o null si no existe
      */
-    fun updateUsuario(userId: Int, request: com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest): Usuario? {
+    fun updateUsuario(userId: String, request: com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest): Usuario? {
         logger.info("Actualizando usuario ID: $userId")
         val entity = usuarioRepository.findById(userId).orElse(null) ?: return null
         entity.nombres = request.nombres

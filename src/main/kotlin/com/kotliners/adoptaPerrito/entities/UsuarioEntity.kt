@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.UuidGenerator
 import java.time.LocalDateTime
 
 /**
@@ -20,11 +21,11 @@ import java.time.LocalDateTime
 @Table(name = "usuario")
 data class UsuarioEntity(
 
-    /** Identificador único del usuario */
+    /** Identificador único del usuario (UUID generado automáticamente) */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "usuario_id")
-    val id: Int? = null,
+    @UuidGenerator
+    @Column(name = "usuario_id", updatable = false, nullable = false)
+    val id: String? = null,
 
     /** Clave Única de Registro de Población */
     @Column(name = "curp", unique = true, nullable = false, length = 18)
@@ -77,5 +78,9 @@ data class UsuarioEntity(
 
     /** Fecha de registro del usuario */
     @Column(name = "fecha_registro", nullable = false, updatable = false)
-    val fechaRegistro: LocalDateTime = LocalDateTime.now()
+    val fechaRegistro: LocalDateTime = LocalDateTime.now(),
+
+    /** Fecha de eliminación lógica (soft delete) — null si el usuario está activo */
+    @Column(name = "fecha_eliminado")
+    var fechaEliminado: LocalDateTime? = null
 )
