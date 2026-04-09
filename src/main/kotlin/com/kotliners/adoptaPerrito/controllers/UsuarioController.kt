@@ -1,6 +1,5 @@
 package com.kotliners.adoptaPerrito.controllers
 
-import com.kotliners.adoptaPerrito.domain.Usuario 
 import com.kotliners.adoptaPerrito.domain.toUsuario
 import com.kotliners.adoptaPerrito.dto.request.CreateUsuarioRequest
 import com.kotliners.adoptaPerrito.dto.request.LoginRequest
@@ -10,20 +9,17 @@ import com.kotliners.adoptaPerrito.dto.response.LogoutResponse
 import com.kotliners.adoptaPerrito.dto.response.LoginResponse
 import com.kotliners.adoptaPerrito.services.UsuarioService      
 
+import jakarta.validation.Valid
 
 import java.security.MessageDigest
+import java.time.LocalDateTime
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
-
-import jakarta.validation.Valid
-
-import java.time.LocalDateTime
 
 /**
  * Controlador REST encargado de exponer los endpoints relacionados
@@ -75,35 +71,35 @@ class UsuarioController {
      */
     @GetMapping("/me")
     fun getCurrentUser(
-        @RequestHeader("Authorization") token: String?
+        @RequestHeader("Authorization", required = false) token: String?
     ): ResponseEntity<Any> {
-        logger.info("Solicitud /me recibida con token: $token")
-        if (token == null) {
-            return ResponseEntity.status(401).body("Token requerido")
-        }
+        logger.info("Token recibido en /me: $token")
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+
         val cleanToken = token.replace("Bearer ", "").trim()
         val userFound = userService.findByToken(cleanToken)
-        return if (userFound != null) {
-            logger.info("Usuario autenticado: ${userFound.email}")
-            ResponseEntity.ok(
-                mapOf(
-                    "fotoPerfil" to userFound.fotoPerfil,
-                    "id" to userFound.id,
-                    "email" to userFound.email,
-                    "username" to userFound.username,
-                    "rol" to userFound.rol,
-                    "nombres" to userFound.nombres,
-                    "apellidoPaterno" to userFound.apellidoPaterno,
-                    "apellidoMaterno" to userFound.apellidoMaterno,
-                    "codigoPostal" to userFound.codigoPostal,
-                    "curp" to userFound.curp
-                )
-            )
-        } else {
+        if (userFound == null) {
             logger.warn("Token inválido en /me")
-            ResponseEntity.status(401).body("Token inválido")
+            return ResponseEntity.status(401).body("Token inválido")
         }
+
+        logger.info("Usuario autenticado: ${userFound.email}")
+        return ResponseEntity.ok(
+            mapOf(
+                "fotoPerfil" to userFound.fotoPerfil,
+                "id" to userFound.id,
+                "email" to userFound.email,
+                "username" to userFound.username,
+                "rol" to userFound.rol,
+                "nombres" to userFound.nombres,
+                "apellidoPaterno" to userFound.apellidoPaterno,
+                "apellidoMaterno" to userFound.apellidoMaterno,
+                "codigoPostal" to userFound.codigoPostal,
+                "curp" to userFound.curp
+            )
+        )
     }
+
     /**
      * Función auxiliar para hash de contraseñas usando SHA-256. 
      * 
@@ -135,17 +131,12 @@ class UsuarioController {
     ): ResponseEntity<RegisterResponse> {
         logger.info("Solicitud de registro recibida: $createUsuarioRequest")
         val usuarioCreado = createUsuarioRequest.toUsuario()
-        val hashedPassword = hashPassword(usuarioCreado.password)
-        val usuarioConPasswordHash = usuarioCreado.copy(password = hashedPassword)
+        val usuarioConPasswordHash = usuarioCreado.copy(password = hashPassword(usuarioCreado.password))
         val usuarioGuardado = userService.addNewUsuario(usuarioConPasswordHash)
         logger.info("Usuario registrado exitosamente: $usuarioGuardado")
-        
-        val registerResponse = RegisterResponse(
-            usuario = usuarioGuardado,
-            mensaje = "Usuario registrado exitosamente"
+        return ResponseEntity.status(201).body(
+            RegisterResponse(usuario = usuarioGuardado, mensaje = "Usuario registrado exitosamente")
         )
-        
-        return ResponseEntity.status(201).body(registerResponse)
     }
 
     /**
@@ -168,33 +159,22 @@ class UsuarioController {
      * @return ResponseEntity con LoginResponse (token) y código HTTP 200 (OK),
      *         o código HTTP 401 (Unauthorized) si las credenciales son incorrectas
      */
-
-     @PostMapping("/login")
+    @PostMapping("/login")
     fun login(
         @Valid @RequestBody loginRequest: LoginRequest
     ): ResponseEntity<Any> {
-
-        // Hashear la contraseña proporcionada para comparación con la BD
         val passwordHash = hashPassword(loginRequest.password)
-        logger.info("Contraseña hasheada de la petición: $passwordHash")
-  
-        // Intentar autenticar al usuario con email y contraseña hasheada
+        logger.info("Intento de login con: ${loginRequest.email}")
+
         val userFound = userService.login(loginRequest.email, passwordHash)
-
-        // Logging detallado para debugging
-        logger.info("Intento de login con: $loginRequest")
         logger.info("Usuario encontrado: ${userFound != null}")
-        if (userFound != null) {
-            logger.info("Token generado para usuario: ${userFound.token}")
-        }
 
-        // Retornar respuesta apropiada según resultado de autenticación
         return if (userFound != null) {
-            logger.info("Login exitoso para usuario: ${userFound.email}")
+            logger.info("Login exitoso para: ${userFound.email}")
             activeTokens.add(userFound.token.orEmpty())
             ResponseEntity.ok(LoginResponse(userFound.token.orEmpty()))
         } else {
-            logger.warn("Login fallido para email: ${loginRequest.email}")
+            logger.warn("Login fallido para: ${loginRequest.email}")
             ResponseEntity.status(401).body("Credenciales incorrectas")
         }
     }
@@ -221,32 +201,27 @@ class UsuarioController {
      * @return ResponseEntity con LogoutResponse y código HTTP 200 (OK),
      *         o código HTTP 401 (Unauthorized) si el token es inválido
      */
-
-     @PostMapping("/logout")
+    @PostMapping("/logout")
     fun logout(
-        @RequestHeader("Authorization") token: String?
+        @RequestHeader("Authorization", required = false) token: String?
     ): ResponseEntity<Any> {
-        logger.info("Solicitud de logout recibida con token: ${token}...")
-       
-        // Validar que el token existe y corresponde a un usuario válido
-        val userFound = userService.findByToken(token.orEmpty())
-        if (token == null || userFound == null) {
-            logger.warn("Token inválido o usuario no encontrado para logout")
+        logger.info("Solicitud de logout con token: $token")
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+        if (userFound == null) {
+            logger.warn("Token inválido para logout")
             return ResponseEntity.status(401).body("Token inválido")
         }
 
-        // Invalidar el token en la base de datos (ponerlo como null)
-        userService.invalidateToken(userFound.id)  
-        logger.info("Token invalidado para usuario: ${userFound.email}")
-        activeTokens.remove(token)
+        userService.invalidateToken(userFound.id)
+        activeTokens.remove(cleanToken)
+        logger.info("Token invalidado para: ${userFound.email}")
 
-        // Crear respuesta con el usuario real y timestamp actual
-        val logoutResponse = LogoutResponse(
-            userId = userFound.id,  
-            logoutDateTime = LocalDateTime.now().toString()  
+        return ResponseEntity.ok(
+            LogoutResponse(userId = userFound.id, logoutDateTime = LocalDateTime.now().toString())
         )
-
-        return ResponseEntity.ok(logoutResponse)
     }
 
 
@@ -266,22 +241,22 @@ class UsuarioController {
      */
     @PutMapping
     fun updateUsuario(
-        @RequestHeader("Authorization") token: String?,
+        @RequestHeader("Authorization", required = false) token: String?,
         @RequestBody updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Any> {
         logger.info("Solicitud de actualización recibida")
-        if (token == null) {
-            return ResponseEntity.status(401).body("Token requerido")
-        }
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+
         val cleanToken = token.replace("Bearer ", "").trim()
         val userFound = userService.findByToken(cleanToken)
         if (userFound == null) {
             logger.warn("Token inválido en PUT /usuarios")
             return ResponseEntity.status(401).body("Token inválido")
         }
+
         val usuarioActualizado = userService.updateUsuario(userFound.id!!, updateUsuarioRequest)
         return if (usuarioActualizado != null) {
-            logger.info("Usuario actualizado exitosamente: ${usuarioActualizado.id}")
+            logger.info("Usuario actualizado: ${usuarioActualizado.id}")
             ResponseEntity.ok(usuarioActualizado)
         } else {
             ResponseEntity.status(404).body("Usuario no encontrado")
