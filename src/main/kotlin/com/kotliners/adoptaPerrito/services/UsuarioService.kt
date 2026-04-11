@@ -74,7 +74,7 @@ class UsuarioService {
             val (latitud, longitud) = translateCpToCoords(cp)
             codigoPostalRepository.save(
                 com.kotliners.adoptaPerrito.entities.CodigoPostalEntity(
-                    cp = cp,
+                    codigoPostal = cp,
                     latitud = latitud,
                     longitud = longitud
                 )
