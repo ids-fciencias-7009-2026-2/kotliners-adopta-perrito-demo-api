@@ -12,10 +12,16 @@
 			"name": "Registrar Usuario",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"01000\",\n  \"password\": \"12345678\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -41,10 +47,16 @@
 			"name": "Registrar Usuario (datos duplicados)",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"01000\",\n  \"password\": \"12345678\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -70,10 +82,16 @@
 			"name": "Registrar Usuario (datos faltantes)",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"cp\": \"01000\"\n}",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https://foto.com/perfil.jpg\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"01000\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -99,10 +117,16 @@
 			"name": "Registrar Usuario (datos invalidos)",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https//foto.com/perfil.jpg\",\n  \"nombre\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antoniotest.com\",\n  \"cp\": \"01000\",\n  \"password\": \"12345678\"\n}",
+					"raw": "{\n  \"curp\": \"XAXX010101HNEXXXA\",\n  \"username\": \"zarco\",\n  \"rol\": \"ADOPTANTE\",\n  \"fotoPerfil\": \"https//foto.com/perfil.jpg\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antoniotest.com\",\n  \"codigoPostal\": \"01000\",\n  \"password\": \"12345678\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -125,10 +149,51 @@
 			"response": []
 		},
 		{
+			"name": "Inicio de Sesión",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"antonio@test.com\",\n  \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Inicio de Sesión (credenciales incorrectas)",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n  \"email\": \"antonio@test.com\",\n  \"password\": \"123456\"\n}",
@@ -157,39 +222,16 @@
 			"name": "Inicio de Sesión (datos inválidos)",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n  \"email\": \"antoniotest.com\",\n  \"password\": \"12345678\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/usuarios/login",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"usuarios",
-						"login"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Inicio de Sesión",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"email\": \"antonio@test.com\",\n  \"password\": \"12345678\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -238,13 +280,13 @@
 			"response": []
 		},
 		{
-			"name": "Consulta de información (usuario autenticado, token invalido)",
+			"name": "Consulta de información (token inválido)",
 			"request": {
 				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer ",
+						"value": "Bearer token-invalido",
 						"type": "text"
 					}
 				],
@@ -264,18 +306,12 @@
 			"response": []
 		},
 		{
-			"name": "Cierre de sesión (token inválido)",
+			"name": "Consulta de información (sin token)",
 			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "123",
-						"type": "text"
-					}
-				],
+				"method": "GET",
+				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/usuarios/logout",
+					"raw": "http://localhost:8080/usuarios/me",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -283,7 +319,124 @@
 					"port": "8080",
 					"path": [
 						"usuarios",
-						"logout"
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Usuario",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombres\": \"Antonio Actualizado\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"06600\",\n  \"fotoPerfil\": \"https://foto.com/nueva-foto.jpg\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Usuario (token inválido)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer token-invalido",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"06600\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Usuario (datos inválidos)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antoniotest.com\",\n  \"codigoPostal\": \"abc\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/usuarios",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios"
 					]
 				}
 			},
@@ -296,7 +449,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
+						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
 						"type": "text"
 					}
 				],
@@ -316,18 +469,18 @@
 			"response": []
 		},
 		{
-			"name": "Consulta de información (usuario no autenticado)",
+			"name": "Cierre de sesión (token inválido)",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer a4ecbcdc-45d6-46c3-b1bd-2ebb1f925c3e",
+						"value": "Bearer token-invalido",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/usuarios/me",
+					"raw": "http://localhost:8080/usuarios/logout",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -335,7 +488,27 @@
 					"port": "8080",
 					"path": [
 						"usuarios",
-						"me"
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cierre de sesión (sin token)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/usuarios/logout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"usuarios",
+						"logout"
 					]
 				}
 			},
