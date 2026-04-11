@@ -15,7 +15,7 @@ data class CodigoPostalEntity(
 
     /** Código postal de 5 dígitos (PK) */
     @Id
-    @Column(name = "cp", length = 5)
+    @Column(name = "codigo_postal", length = 5)
     val cp: String,
 
     /** Latitud geográfica (mock si no se conoce) */
