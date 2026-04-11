@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service
 
 import java.util.UUID
 import java.time.LocalDateTime
-
 /**
  * Servicio de negocio para la gestión de usuarios en el sistema de adopción de perros.
  *
@@ -123,9 +122,9 @@ class UsuarioService {
         ensureCodigoPostalExists(usuarioEntity.codigoPostal)
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado en la base de datos con ID: ${savedEntity.id}")
-        val usuario = savedEntity.toUsuario()
-        usuario.password = "****"  // Ocultar contraseña antes de retornar
-        return usuario
+        val usuarioGuardado = savedEntity.toUsuario()
+        usuarioGuardado.password = "****"  // Ocultar contraseña antes de retornar
+        return usuarioGuardado
     }
 
     /**
@@ -220,7 +219,7 @@ class UsuarioService {
             logger.warn("Intento de invalidar token con ID null")
             return
         }
-        usuarioRepository.updateTokenById(userId, null)
+        usuarioRepository.updateTokenById(UUID.fromString(userId), null)
         logger.info("Token invalidado para usuario ID: $userId")
     }
 
@@ -236,7 +235,7 @@ class UsuarioService {
      */
     fun updateUsuario(userId: String, request: com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest): Usuario? {
         logger.info("Actualizando usuario ID: $userId")
-        val entity = usuarioRepository.findById(userId).orElse(null) ?: return null
+        val entity = usuarioRepository.findById(UUID.fromString(userId)).orElse(null) ?: return null
         entity.nombres = request.nombres
         entity.apellidoPaterno = request.apellidoPaterno
         entity.apellidoMaterno = request.apellidoMaterno
