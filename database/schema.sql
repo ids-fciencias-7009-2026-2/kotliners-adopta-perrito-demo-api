@@ -47,7 +47,7 @@ CREATE TABLE usuario (
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_update     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_eliminado  TIMESTAMP,
-    FOREIGN KEY (codigo_postal) REFERENCES codigo_postal(cp)
+    FOREIGN KEY (codigo_postal) REFERENCES codigo_postal(codigo_postal)
 );
 
 CREATE INDEX idx_usuario_cp ON usuario(codigo_postal);
