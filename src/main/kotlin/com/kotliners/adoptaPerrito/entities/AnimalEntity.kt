@@ -58,8 +58,8 @@ data class AnimalEntity(
 	var estatus: Estatus = Estatus.DISPONIBLE,
 
 	/** UUID del usuario dueño del animal */
-	@Column(name = "usuario_id", nullable = false)
-	var usuarioId: UUID,
+	@Column(name = "usuario_id", nullable = false, updatable = false)
+	var usuarioId: UUID? = null,
 
 	/** Fecha de registro del animal */
 	@Column(name = "fecha_registro")
