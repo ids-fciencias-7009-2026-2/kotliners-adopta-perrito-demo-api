@@ -228,14 +228,25 @@ class UsuarioService {
      *
      * Solo actualiza los campos que vienen en el request (parcial).
      * No permite cambiar curp, username ni token.
+     * Valida que el nuevo email no esté en uso por otro usuario.
      *
      * @param userId ID del usuario a actualizar
      * @param request DTO con los campos a actualizar
      * @return El usuario actualizado, o null si no existe
+     * @throws IllegalArgumentException si el email ya está registrado por otro usuario
      */
     fun updateUsuario(userId: String, request: com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest): Usuario? {
         logger.info("Actualizando usuario ID: $userId")
-        val entity = usuarioRepository.findById(UUID.fromString(userId)).orElse(null) ?: return null
+        val uuid = UUID.fromString(userId)
+        val entity = usuarioRepository.findById(uuid).orElse(null) ?: return null
+
+        // Validate email is not taken by a different user
+        val existingWithEmail = usuarioRepository.findByEmail(request.email)
+        if (existingWithEmail != null && existingWithEmail.id != uuid) {
+            logger.warn("Intento de actualizar email a uno ya registrado: ${request.email}")
+            throw IllegalArgumentException("El correo electrónico ya está en uso por otro usuario.")
+        }
+
         entity.nombres = request.nombres
         entity.apellidoPaterno = request.apellidoPaterno
         entity.apellidoMaterno = request.apellidoMaterno
