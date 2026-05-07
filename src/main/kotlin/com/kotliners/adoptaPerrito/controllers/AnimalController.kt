@@ -2,9 +2,11 @@ package com.kotliners.adoptaPerrito.controllers
 
 // import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
-// import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import jakarta.validation.Valid
@@ -93,24 +95,59 @@ class AnimalController {
 
     /**
      * Actualizar la información de un animal
-     * - URL: PUT /api/animales/{id}
-     * - Requisitos: header `Authorization` obligatorio
-     * - TODOs:
-     *   - Validar token y obtener usuario autenticado
-     *   - Verificar que el usuario autenticado sea el dueño del animal (owner check)
-     *   - Validar DTO `UpdateAnimalRequest` y aplicar cambios parciales
-     *   - Llamar `animalService.updateAnimal(id, updatedDomain)`
-     *   - Retornar 200 con el recurso actualizado o 403 si no es owner
+     * 
+     * - URL:  /api/animales/{id}
+     * - Método: PUT
+     * - Headers: Authorization: Bearer <token>
+     * 
+     * @param token Token de autenticación del usuario 
+     * @param id Identificador del animal a actualizar
+     * @param updateRequest DTO con los campos a actualizar
+     * @return ResponseEntity con el resultado de la operación:
+     *      - 200 OK con el animal actualizado
+     *      - 400 Bad Request si el DTO no es válido
+     *      - 401 Unauthorized si el token es inválido o no se proporciona
+     *      - 403 Forbidden si el usuario no es dueño del animal
+     *      - 404 Not Found si no existe el animal
      */
-    // @PutMapping("/{id}")
-    // fun updateAnimal(
-    //     @RequestHeader("Authorization", required = true) token: String?,
-    //     @PathVariable id: String,
-    //     @Valid @RequestBody updateRequest: UpdateAnimalRequest
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: validación de token, owner check, aplicar update
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @PutMapping("/{id}")
+    fun updateAnimal(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @PathVariable id: String,
+        @Valid @RequestBody updateRequest: UpdateAnimalRequest
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud para actualizar animal con ID: $id")
+        if (token == null) {
+            logger.warn("Intento de actualizar animal sin token")
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+        if (userFound == null) {
+            logger.warn("Token inválido al actualizar animal")
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+
+        val animalFound = animalService.getAnimalById(id)
+        if (animalFound == null) {
+            logger.warn("Animal no encontrado para actualizar: $id")
+            return ResponseEntity.status(404).body("Animal no encontrado")
+        }
+
+        if (animalFound.usuarioId != userFound.id) {
+            logger.warn("Usuario ${userFound.id} intentó actualizar un animal que no le pertenece")
+            return ResponseEntity.status(403).body("No autorizado para actualizar este animal")
+        }
+
+        val updated = animalService.updateAnimal(id, updateRequest)
+        return if (updated != null) {
+            logger.info("Animal actualizado correctamente: $id")
+            ResponseEntity.ok(updated)
+        } else {
+            ResponseEntity.status(404).body("Animal no encontrado")
+        }
+    }
 
     /**
      * Endpoint para eliminar un animal del sistema

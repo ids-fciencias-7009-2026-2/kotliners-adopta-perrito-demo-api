@@ -2,7 +2,11 @@ package com.kotliners.adoptaPerrito.services
 
 import com.kotliners.adoptaPerrito.domain.Animal
 import com.kotliners.adoptaPerrito.domain.toAnimal
+
+import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+
 import com.kotliners.adoptaPerrito.entities.AnimalEntity
+
 import com.kotliners.adoptaPerrito.repositories.AnimalRepository
 import com.kotliners.adoptaPerrito.repositories.toAnimalEntity
 
@@ -58,10 +62,35 @@ class AnimalService {
     }
 
     /** 
-     * TODO: Actualiza campos de un animal existente
+     * Actualiza la información de un animal existente.
+     * 
+     * @param id Identificador del animal a actualizar
+     * @param updates Objeto con los datos actualizados del animal
+     * @return El animal actualizado o null si no se encontró el animal
      */
-    // fun updateAnimal(id: String, updates: Animal): Animal? {
-    // }
+    fun updateAnimal(id: String, updates: UpdateAnimalRequest): Animal? {
+        logger.info("Actualizando animal por ID: $id")
+        val uuid = UUID.fromString(id)
+        val entity = animalRepository.findById(uuid).orElse(null)
+        if (entity == null) {
+            logger.warn("No se encontró el animal con ID: $id")
+            return null
+        }
+        entity.nombre = updates.nombre
+        entity.especie = updates.especie
+        entity.raza = updates.raza
+        entity.fechaNacimiento = updates.fechaNacimiento
+        entity.sexo = updates.sexo
+        entity.descripcion = updates.descripcion
+        entity.estatus = updates.estatus
+        entity.inapropiado = updates.inapropiado
+        entity.esterilizado = updates.esterilizado
+        entity.updatedAt = LocalDateTime.now()
+
+        val savedEntity = animalRepository.save(entity)
+        logger.info("Animal actualizado con éxito: $id")
+        return savedEntity.toAnimal()
+    }
 
     /** 
      * Elimina un animal por su ID. 
