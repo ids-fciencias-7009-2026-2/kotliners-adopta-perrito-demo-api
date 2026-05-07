@@ -1,8 +1,10 @@
 package com.kotliners.adoptaPerrito.controllers
 
 // import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
+import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 // import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.services.AnimalService
+import com.kotliners.adoptaPerrito.services.UsuarioService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import jakarta.validation.Valid
@@ -32,6 +34,10 @@ class AnimalController {
     /* Servicio para gestionar operaciones relacionadas con animales */
     @Autowired
     lateinit var animalService: AnimalService
+
+    /* Servicio para validar token y obtener el usuario autenticado */
+    @Autowired
+    lateinit var userService: UsuarioService
 
     /**
      * Crear un nuevo animal
@@ -107,20 +113,52 @@ class AnimalController {
     // }
 
     /**
-     * Eliminar un animal del sistema
-     * - URL: DELETE /api/animales/{id}
-     * - Requisitos: header `Authorization` obligatorio
-     * - TODOs:
-     *   - Validar token y obtener usuario autenticado
-     *   - Verificar que solo el dueño pueda eliminar (owner check)
-     *   - Llamar `animalService.deleteAnimal(id)` y devolver 204 o 404
+     * Endpoint para eliminar un animal del sistema
+     * 
+     * - URL:       /api/animales
+     * - Método:    DELETE
+     * - Headers:   Authorization: Bearer <token>
+     * 
+     * @param token Token de autenticación del usuario 
+     * @param deleteAnimalRequest DTO que contiene el ID del animal a eliminar
+     * @return ResponseEntity con el resultado de la operación:
+     *      - 200 OK
+     *      - 401 Unauthorized
+     *      - 403 Forbidden
+     *      - 404 Not Found
      */
-    // @DeleteMapping("/{id}")
-    // fun deleteAnimal(
-    //     @RequestHeader("Authorization", required = true) token: String?,
-    //     @PathVariable id: String
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: validación de token, owner check, realizar eliminación
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @DeleteMapping
+    fun deleteAnimal(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @Valid @RequestBody deleteAnimalRequest: DeleteAnimalRequest
+    ): ResponseEntity<Any> {
+        val id = deleteAnimalRequest.animalId
+        logger.info("Solicitud para eliminar animal con ID: $id")
+        if (token == null) {
+            logger.warn("Intento de eliminar animal sin token")
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+        if (userFound == null) {
+            logger.warn("Token inválido al eliminar animal")
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+        val animalFound = animalService.getAnimalById(id)
+        if (animalFound == null) {
+            logger.warn("Animal no encontrado para eliminar: $id")
+            return ResponseEntity.status(404).body("Animal no encontrado")
+        }
+        if (animalFound.usuarioId != userFound.id) {
+            logger.warn("Usuario ${userFound.id} intentó eliminar un animal que no le pertenece")
+            return ResponseEntity.status(403).body("No autorizado para eliminar este animal")
+        }
+        val deleted = animalService.deleteAnimal(id)
+        return if (deleted) {
+            logger.info("Animal eliminado correctamente: $id")
+            ResponseEntity.ok("Animal eliminado exitosamente")
+        } else {
+            ResponseEntity.status(404).body("Animal no encontrado")
+        }
+    }
 }
