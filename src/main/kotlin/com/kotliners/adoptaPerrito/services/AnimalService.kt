@@ -41,9 +41,21 @@ class AnimalService {
     // }
 
     /** 
-     * TODO: Obtiene un animal por su ID */
-    // fun getAnimalById(id: String): Animal? {
-    // }
+     * Busca un animal por su ID y lo devuelve como un objeto de dominio. 
+     * 
+     * @param id Identificador del animal a buscar
+     * @return El animal encontrado o null si no existe
+     */
+    fun getAnimalById(id: String): Animal? {
+        logger.info("Buscando animal por ID: $id")
+        var uuid = UUID.fromString(id)
+        val entity = animalRepository.findById(uuid).orElse(null)
+        if (entity == null) {
+            logger.warn("No se encontró el animal con ID: $id")
+            return null
+        }
+        return entity.toAnimal()
+    }
 
     /** 
      * TODO: Actualiza campos de un animal existente
@@ -52,10 +64,21 @@ class AnimalService {
     // }
 
     /** 
-     * TODO: Elimina un animal por su ID 
+     * Elimina un animal por su ID. 
+     * 
+     * @param id Identificador del animal a eliminar
+     * @return true si el animal fue eliminado, false si no se encontró el animal
      */
-    // fun deleteAnimal(id: String): Boolean {
-    // }
+    fun deleteAnimal(id: String): Boolean {
+        logger.info("Eliminando animal por ID: $id")
+        val uuid = UUID.fromString(id)
+        if (!animalRepository.existsById(uuid)) {
+            logger.warn("No existe el animal con ID: $id")
+            return false
+        }
+        animalRepository.deleteById(uuid)
+        return true
+    }
 
     /** 
      * TODO: Lista animales por dueño 
