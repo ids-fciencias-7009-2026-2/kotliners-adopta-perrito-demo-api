@@ -1,0 +1,49 @@
+package com.kotliners.adoptaPerrito.dto.request
+
+import com.kotliners.adoptaPerrito.domain.Estatus
+import com.kotliners.adoptaPerrito.domain.Sexo
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import java.time.LocalDate
+
+/**
+ * DTO para actualizar un animal. Todos los campos son requeridos
+ * para simplificar la actualización parcial en el controller/service.
+ */
+data class UpdateAnimalRequest(
+
+    /* Nombre del animal */
+    @field:NotBlank(message = "Por favor, ingresa el nombre del animal.")
+    val nombre: String,
+
+    /* Especie del animal */
+    @field:NotBlank(message = "Por favor, ingresa la especie del animal.")
+    val especie: String,
+
+    /* Raza del animal */
+    val raza: String? = null,
+
+    /* Fecha de nacimiento del animal */
+    @field:NotNull(message = "Por favor, ingresa la fecha de nacimiento.")
+    val fechaNacimiento: LocalDate,
+
+    /* Sexo del animal */
+    @field:NotNull(message = "Por favor, indica el sexo del animal.")
+    val sexo: Sexo,
+
+    /* Descripción del animal */
+    @field:NotBlank(message = "Por favor, ingresa una descripción.")
+    val descripcion: String,
+
+    /* Estatus del animal */
+    @field:NotNull(message = "Por favor, indica el estatus del animal.")
+    val estatus: Estatus,
+
+    /* Indica si el animal fue marcado como inapropiado */
+    @field:NotNull(message = "Por favor, indica si es inapropiado o no.")
+    val inapropiado: Boolean,
+
+    /* Indica si el animal está esterilizado */
+    @field:NotNull(message = "Por favor, indica si está esterilizado.")
+    val esterilizado: Boolean
+)
