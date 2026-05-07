@@ -1,7 +1,6 @@
 package com.kotliners.adoptaPerrito.services
 
 import com.kotliners.adoptaPerrito.domain.AnimalInteres
-import com.kotliners.adoptaPerrito.domain.toAnimal
 import com.kotliners.adoptaPerrito.dto.response.AnimalInteresResponse
 import com.kotliners.adoptaPerrito.entities.AnimalInteresEntity
 import com.kotliners.adoptaPerrito.entities.AnimalInteresId
