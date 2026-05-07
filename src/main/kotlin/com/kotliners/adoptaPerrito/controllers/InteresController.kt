@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
  * Expone los endpoints:
  * - POST   /api/animales/{id}/interes  - Manifestar interés en un animal
  * - DELETE /api/animales/{id}/interes  - Eliminar interés en un animal
- * - GET    /api/usuarios/me/intereses  - Listar animales de interés del usuario autenticado
+ * - GET    /api/usuarios/me/intereses  -  Listar animales de interés del usuario autenticado
  */
 @RestController
 class InteresController {
