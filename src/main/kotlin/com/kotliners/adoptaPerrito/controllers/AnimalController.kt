@@ -3,6 +3,7 @@ package com.kotliners.adoptaPerrito.controllers
 // import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+import com.kotliners.adoptaPerrito.dto.response.toAnimalDetailResponse
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.*
  * - Eliminar un animal del sistema
  */
 @RestController
-@RequestMapping("/api/animales")
+@RequestMapping(value = ["/api/animales", "/animals"])
 class AnimalController {
     
     /* Logger para registrar información relevante durante la ejecución de las operaciones del controlador */
@@ -40,6 +41,16 @@ class AnimalController {
     /* Servicio para validar token y obtener el usuario autenticado */
     @Autowired
     lateinit var userService: UsuarioService
+
+    /**
+     * Resuelve el usuario autenticado a partir del header Authorization.
+     */
+    private fun resolveAuthenticatedUser(token: String?) =
+        token
+            ?.replace("Bearer ", "")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { userService.findByToken(it) }
 
     /**
      * Crear un nuevo animal
@@ -78,20 +89,36 @@ class AnimalController {
 
     /**
      * Obtener detalles de un animal específico
-     * - URL: GET /api/animales/{id}
-     * - Requisitos: token opcional
-     * - TODOs:
-     *   - Llamar `animalService.getAnimalById(id)`
-     *   - Devolver 200 con el detalle o 404 si no existe
+     * - URL principal: GET /animals/{id}
+     * - URL compatible: GET /api/animales/{id}
+     * - Requisitos: header `Authorization: Bearer <token>` obligatorio
+     * - Devuelve los datos del animal y las banderas de permisos del usuario autenticado.
      */
-    // @GetMapping("/{id}")
-    // fun getAnimal(
-    //     @RequestHeader("Authorization", required = false) token: String?,
-    //     @PathVariable id: String
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: recuperar por id y devolver 200/404
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @GetMapping("/{id}")
+    fun getAnimal(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @PathVariable id: String
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud para consultar detalle de animal con ID: $id")
+        if (token == null) {
+            logger.warn("Intento de consultar detalle de animal sin token")
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+
+        val userFound = resolveAuthenticatedUser(token)
+        if (userFound == null) {
+            logger.warn("Token inválido al consultar detalle de animal")
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+
+        val animalFound = animalService.getAnimalById(id)
+        if (animalFound == null) {
+            logger.warn("Animal no encontrado para detalle: $id")
+            return ResponseEntity.status(404).body("Animal no encontrado")
+        }
+
+        return ResponseEntity.ok(animalFound.toAnimalDetailResponse(userFound.id.orEmpty()))
+    }
 
     /**
      * Actualizar la información de un animal
@@ -122,8 +149,7 @@ class AnimalController {
             return ResponseEntity.status(401).body("Token requerido")
         }
 
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val userFound = userService.findByToken(cleanToken)
+        val userFound = resolveAuthenticatedUser(token)
         if (userFound == null) {
             logger.warn("Token inválido al actualizar animal")
             return ResponseEntity.status(401).body("Token inválido")
@@ -175,8 +201,7 @@ class AnimalController {
             logger.warn("Intento de eliminar animal sin token")
             return ResponseEntity.status(401).body("Token requerido")
         }
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val userFound = userService.findByToken(cleanToken)
+        val userFound = resolveAuthenticatedUser(token)
         if (userFound == null) {
             logger.warn("Token inválido al eliminar animal")
             return ResponseEntity.status(401).body("Token inválido")

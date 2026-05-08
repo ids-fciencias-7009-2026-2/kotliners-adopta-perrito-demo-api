@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalle de animal | Colitas Felices</title>
+    <link rel="stylesheet" href="/animal-detail.css">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="detail-view" aria-live="polite">
+            <div class="media-panel">
+                <div class="animal-mark" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <article class="content-panel">
+                <div class="topbar">
+                    <button id="backButton" class="back-link" type="button">Volver</button>
+                    <span id="ownerBadge" class="owner-badge" hidden>Tu publicacion</span>
+                </div>
+
+                <p id="statusText" class="status-text">Cargando detalle...</p>
+                <h1 id="animalName">Animal</h1>
+
+                <dl class="facts">
+                    <div>
+                        <dt>Especie</dt>
+                        <dd id="animalSpecies">-</dd>
+                    </div>
+                    <div>
+                        <dt>Raza</dt>
+                        <dd id="animalBreed">-</dd>
+                    </div>
+                    <div>
+                        <dt>Sexo</dt>
+                        <dd id="animalSex">-</dd>
+                    </div>
+                    <div>
+                        <dt>Nacimiento</dt>
+                        <dd id="animalBirthDate">-</dd>
+                    </div>
+                    <div>
+                        <dt>Estatus</dt>
+                        <dd id="animalStatus">-</dd>
+                    </div>
+                    <div>
+                        <dt>Esterilizado</dt>
+                        <dd id="animalSterilized">-</dd>
+                    </div>
+                </dl>
+
+                <section class="description-block">
+                    <h2>Descripcion</h2>
+                    <p id="animalDescription">-</p>
+                </section>
+
+                <section id="ownerActions" class="actions" hidden>
+                    <button id="deleteButton" class="danger-button" type="button">Eliminar</button>
+                    <p id="deleteMessage" class="inline-message" role="status"></p>
+                </section>
+            </article>
+        </section>
+    </main>
+
+    <script src="/animal-detail.js" defer></script>
+</body>
+</html>

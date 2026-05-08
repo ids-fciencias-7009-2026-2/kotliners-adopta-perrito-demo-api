@@ -39,3 +39,43 @@ PASSWORD_DB=tu_password
 ./mvnw spring-boot:run
 ```
 Verifica que aparezca `Started AdoptaPerritoApplicationKt` en la consola.
+
+## Iteracion 3 - Ver detalle de animal
+
+### Backend
+
+Endpoint autenticado:
+```http
+GET /animals/{id}
+Authorization: Bearer <token>
+```
+
+Tambien se mantiene la ruta compatible:
+```http
+GET /api/animales/{id}
+Authorization: Bearer <token>
+```
+
+La respuesta incluye los datos del animal y banderas para saber si el usuario autenticado es dueno de la publicacion:
+`esDueno`, `puedeEditar` y `puedeEliminar`.
+
+### Frontend
+
+Vista estatica servida por Spring:
+```text
+http://localhost:8080/animal-detail.html?id={animalId}
+```
+
+La vista consume la API real con token desde `localStorage` o `sessionStorage`; no usa datos simulados.
+
+### Documento
+
+El caso de uso esta documentado en:
+```text
+docs/CU-VerDetalleAnimal.md
+```
+
+La evolucion de la Iteracion 3 para Persona 2 esta integrada en:
+```text
+docs/Iteracion3.md
+```
