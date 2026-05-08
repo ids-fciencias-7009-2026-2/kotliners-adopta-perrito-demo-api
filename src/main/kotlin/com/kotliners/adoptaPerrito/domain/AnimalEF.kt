@@ -3,11 +3,7 @@ package com.kotliners.adoptaPerrito.domain
 import com.kotliners.adoptaPerrito.entities.AnimalEntity
 
 /**
-* TODO: Función de extensión que transforma un CreateAnimalRequest en un Animal de dominio.
- */
-
-/**
- * Función de extensión que convierte un AnimalEntity a un Animal de dominio.
+ * Convierte un AnimalEntity a un Animal de dominio.
  */
 fun AnimalEntity.toAnimal(): Animal {
 	return Animal(
@@ -19,7 +15,7 @@ fun AnimalEntity.toAnimal(): Animal {
 		sexo = this.sexo,
 		descripcion = this.descripcion,
 		estatus = this.estatus,
-		usuarioId = this.usuarioId.toString(),
+		usuarioId = this.usuarioId?.toString() ?: "",
 		fechaRegistro = this.fechaRegistro,
 		inapropiado = this.inapropiado,
 		esterilizado = this.esterilizado,

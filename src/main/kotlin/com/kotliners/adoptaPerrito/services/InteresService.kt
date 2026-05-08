@@ -5,6 +5,8 @@ import com.kotliners.adoptaPerrito.domain.AnimalInteres
 import com.kotliners.adoptaPerrito.domain.Estatus
 import com.kotliners.adoptaPerrito.domain.Rol
 import com.kotliners.adoptaPerrito.dto.response.AnimalInteresResponse
+import com.kotliners.adoptaPerrito.dto.response.InteresRecibidoResponse
+import com.kotliners.adoptaPerrito.dto.response.InteresResponse
 import com.kotliners.adoptaPerrito.entities.AnimalInteresEntity
 import com.kotliners.adoptaPerrito.entities.AnimalInteresId
 import com.kotliners.adoptaPerrito.repositories.AnimalInteresRepository
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 import java.util.UUID
 
@@ -51,14 +54,19 @@ class InteresService {
      * @param usuarioId ID del usuario autenticado.
      * @param usuarioRol Rol del usuario autenticado.
      * @param animalId ID del animal.
-     * @return AnimalInteres creado.
+     * @return InteresResponse con el interes registrado y advertencia si el correo fallo.
      * @throws IllegalArgumentException si el usuario es CUIDADOR, el animal no existe,
      *         ya fue adoptado, o el interes ya fue registrado.
      */
-    fun manifestarInteres(usuarioId: String, usuarioRol: Rol, animalId: String): AnimalInteres {
+    @Transactional
+    fun manifestarInteres(usuarioId: String, usuarioRol: Rol, animalId: String): InteresResponse {
         logger.info("Registrando interes: usuario=$usuarioId, animal=$animalId")
-        val animalUuid = UUID.fromString(animalId)
-        val usuarioUuid = UUID.fromString(usuarioId)
+        val animalUuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Animal no encontrado")
+        }
+        val usuarioUuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Usuario no valido")
+        }
 
         // Solo los adoptantes pueden manifestar interes
         if (usuarioRol != Rol.ADOPTANTE) {
@@ -102,18 +110,23 @@ class InteresService {
                 <p>Saludos,<br>Colitas Felices</p>
                 </body></html>
             """.trimIndent()
-            mailAdapter.sendHtmlEmail(
+            val resultado = mailAdapter.sendHtmlEmail(
                 to = cuidador.email,
                 subject = asunto,
                 htmlBody = cuerpo,
                 cc = adoptante.email
             )
+            if (resultado.isFailure) {
+                logger.error("No se pudo enviar el correo de notificacion: ${resultado.exceptionOrNull()?.message}")
+                throw IllegalStateException("No se pudo notificar al cuidador por correo. Intenta de nuevo mas tarde.")
+            }
         }
 
-        return AnimalInteres(
+        return InteresResponse(
             usuarioId = saved.usuarioId.toString(),
             animalId = saved.animalId.toString(),
-            fecha = saved.fecha
+            fecha = saved.fecha,
+            advertencia = null
         )
     }
 
@@ -124,45 +137,123 @@ class InteresService {
      * @param animalId ID del animal
      * @throws IllegalArgumentException si el interés no existe
      */
+    @Transactional
     fun eliminarInteres(usuarioId: String, animalId: String) {
-        logger.info("Eliminando interés: usuario=$usuarioId, animal=$animalId")
-        val animalUuid = UUID.fromString(animalId)
-        val usuarioUuid = UUID.fromString(usuarioId)
+        logger.info("Eliminando interes: usuario=$usuarioId, animal=$animalId")
+        val animalUuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Animal no encontrado")
+        }
+        val usuarioUuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Usuario no valido")
+        }
 
         if (!interesRepository.existsByUsuarioIdAndAnimalId(usuarioUuid, animalUuid)) {
-            logger.warn("No existe interés para eliminar: usuario=$usuarioId, animal=$animalId")
-            throw IllegalArgumentException("No tienes interés registrado en este animal")
+            logger.warn("No existe interes para eliminar: usuario=$usuarioId, animal=$animalId")
+            throw IllegalArgumentException("No tienes interes registrado en este animal")
         }
 
         interesRepository.deleteById(AnimalInteresId(usuarioId = usuarioUuid, animalId = animalUuid))
-        logger.info("Interés eliminado correctamente")
+        logger.info("Interes eliminado correctamente")
+
+        // Notificar al cuidador que el adoptante ya no esta interesado
+        val animal = animalRepository.findById(animalUuid).orElse(null)
+        val cuidador = animal?.usuarioId?.let { usuarioRepository.findById(it).orElse(null) }
+        val adoptante = usuarioRepository.findById(usuarioUuid).orElse(null)
+        if (animal != null && cuidador != null && adoptante != null) {
+            val asunto = "Actualizacion sobre ${animal.nombre} — interes retirado"
+            val cuerpo = """
+                <html><body>
+                <p>Hola <strong>${cuidador.nombres}</strong>,</p>
+                <p>Te informamos que <strong>${adoptante.nombres} ${adoptante.apellidoPaterno}</strong> ha retirado su interes en <strong>${animal.nombre}</strong>.</p>
+                <p>No te preocupes, tu mascota sigue disponible para otros adoptantes en Colitas Felices.</p>
+                <br>
+                <p>Saludos,<br>Colitas Felices</p>
+                </body></html>
+            """.trimIndent()
+            val resultado = mailAdapter.sendHtmlEmail(
+                to = cuidador.email,
+                subject = asunto,
+                htmlBody = cuerpo,
+                cc = adoptante.email
+            )
+            if (resultado.isFailure) {
+                logger.warn("No se pudo enviar correo de retiro de interes: ${resultado.exceptionOrNull()?.message}")
+            }
+        }
     }
 
     /**
-     * Obtiene la lista de animales en los que un usuario ha manifestado interés.
+     * Obtiene la lista paginada de animales en los que un usuario ha manifestado interes.
      *
-     * @param usuarioId ID del usuario autenticado
-     * @return Lista de AnimalInteresResponse con los datos del animal y la fecha de interés
+     * @param usuarioId ID del usuario autenticado.
+     * @param limit Numero maximo de resultados a devolver (default 20, max 100).
+     * @param offset Numero de resultados a saltar para paginacion (default 0).
+     * @return Lista paginada de AnimalInteresResponse.
      */
-    fun listarIntereses(usuarioId: String): List<AnimalInteresResponse> {
-        logger.info("Listando intereses del usuario: $usuarioId")
+    fun listarIntereses(usuarioId: String, limit: Int = 20, offset: Int = 0): List<AnimalInteresResponse> {
+        logger.info("Listando intereses del usuario: $usuarioId (limit=$limit, offset=$offset)")
+        val safeLimit = limit.coerceIn(1, 100)
+        val safeOffset = offset.coerceAtLeast(0)
         val usuarioUuid = UUID.fromString(usuarioId)
         val intereses = interesRepository.findByUsuarioId(usuarioUuid)
 
-        return intereses.mapNotNull { interes ->
-            val animal = animalRepository.findById(interes.animalId).orElse(null) ?: return@mapNotNull null
-            AnimalInteresResponse(
-                animalId = animal.id.toString(),
-                nombre = animal.nombre,
-                especie = animal.especie,
-                raza = animal.raza,
-                fechaNacimiento = animal.fechaNacimiento,
-                sexo = animal.sexo.name,
-                descripcion = animal.descripcion,
-                estatus = animal.estatus.name,
-                esterilizado = animal.esterilizado,
-                fechaInteres = interes.fecha
-            )
+        return intereses
+            .drop(safeOffset)
+            .take(safeLimit)
+            .mapNotNull { interes ->
+                val animal = animalRepository.findById(interes.animalId).orElse(null) ?: return@mapNotNull null
+                AnimalInteresResponse(
+                    animalId = animal.id.toString(),
+                    nombre = animal.nombre,
+                    especie = animal.especie,
+                    raza = animal.raza,
+                    fechaNacimiento = animal.fechaNacimiento,
+                    sexo = animal.sexo.name,
+                    descripcion = animal.descripcion,
+                    estatus = animal.estatus.name,
+                    esterilizado = animal.esterilizado,
+                    fechaInteres = interes.fecha
+                )
+            }
+    }
+
+    /**
+     * Obtiene la lista paginada de adoptantes interesados en los animales de un cuidador.
+     *
+     * @param cuidadorId ID del cuidador autenticado.
+     * @param limit Numero maximo de resultados (default 20, max 100).
+     * @param offset Numero de resultados a saltar (default 0).
+     * @return Lista de InteresRecibidoResponse con datos del adoptante y el animal.
+     */
+    fun listarInteresesRecibidos(cuidadorId: String, limit: Int = 20, offset: Int = 0): List<InteresRecibidoResponse> {
+        logger.info("Listando intereses recibidos por cuidador: $cuidadorId")
+        val safeLimit = limit.coerceIn(1, 100)
+        val safeOffset = offset.coerceAtLeast(0)
+        val cuidadorUuid = UUID.fromString(cuidadorId)
+
+        // Obtener todos los animales del cuidador
+        val animalesDelCuidador = animalRepository.findAllByUsuarioId(cuidadorUuid)
+        val animalIds = animalesDelCuidador.mapNotNull { it.id }.toSet()
+
+        // Obtener todos los intereses en esos animales
+        val intereses = animalIds.flatMap { animalId ->
+            interesRepository.findByAnimalId(animalId)
         }
+
+        return intereses
+            .drop(safeOffset)
+            .take(safeLimit)
+            .mapNotNull { interes ->
+                val animal = animalRepository.findById(interes.animalId).orElse(null) ?: return@mapNotNull null
+                val adoptante = usuarioRepository.findById(interes.usuarioId).orElse(null) ?: return@mapNotNull null
+                InteresRecibidoResponse(
+                    animalId = animal.id.toString(),
+                    nombreAnimal = animal.nombre,
+                    adoptanteId = adoptante.id.toString(),
+                    nombreAdoptante = "${adoptante.nombres} ${adoptante.apellidoPaterno}",
+                    emailAdoptante = adoptante.email,
+                    fechaInteres = interes.fecha
+                )
+            }
     }
 }

@@ -27,4 +27,11 @@ interface AnimalInteresRepository : CrudRepository<AnimalInteresEntity, AnimalIn
      */
     @Query("select count(i) > 0 from AnimalInteresEntity i where i.usuarioId = :usuarioId and i.animalId = :animalId")
     fun existsByUsuarioIdAndAnimalId(usuarioId: UUID, animalId: UUID): Boolean
+
+    /**
+     * Obtiene todos los intereses registrados en un animal especifico.
+     * @param animalId ID del animal
+     */
+    @Query("select i from AnimalInteresEntity i where i.animalId = :animalId")
+    fun findByAnimalId(animalId: UUID): List<AnimalInteresEntity>
 }

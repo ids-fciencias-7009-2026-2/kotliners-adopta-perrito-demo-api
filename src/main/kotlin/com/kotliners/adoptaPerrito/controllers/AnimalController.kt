@@ -8,6 +8,7 @@ import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
+import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -97,7 +98,24 @@ class AnimalController {
      }
 
     /**
-     * Obtener la lista de animales disponibles
+     * Obtener los animales del cuidador autenticado.
+     * URL:    GET /api/animales/me
+     * Header: Authorization: Bearer <token>
+     */
+    @GetMapping("/me")
+    fun listMyAnimals(
+        @RequestHeader("Authorization", required = false) token: String?
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+            ?: return ResponseEntity.status(401).body("Token invalido")
+        logger.info("Listando animales del cuidador: ${userFound.id}")
+        val animals = animalService.listAnimalsByOwner(userFound.id!!)
+        return ResponseEntity.ok(animals.map { it.toAnimalResponse() })
+    }
+
+    /**
      * - URL: GET /api/animales
      * - Requisitos: token opcional (listar público), soportar filtros en query params
      * - TODOs:
@@ -133,7 +151,8 @@ class AnimalController {
             logger.warn("Animal no encontrado: $id")
             return ResponseEntity.status(404).body("Animal no encontrado")
         }
-        return ResponseEntity.ok(animal.toAnimalResponse())
+        val detalle = animalService.getAnimalDetalle(id, animal)
+        return ResponseEntity.ok(detalle)
      }
 
     /**
