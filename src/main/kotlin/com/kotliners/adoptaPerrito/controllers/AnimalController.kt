@@ -8,6 +8,7 @@ import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
+import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -150,7 +151,8 @@ class AnimalController {
             logger.warn("Animal no encontrado: $id")
             return ResponseEntity.status(404).body("Animal no encontrado")
         }
-        return ResponseEntity.ok(animal.toAnimalResponse())
+        val detalle = animalService.getAnimalDetalle(id, animal)
+        return ResponseEntity.ok(detalle)
      }
 
     /**

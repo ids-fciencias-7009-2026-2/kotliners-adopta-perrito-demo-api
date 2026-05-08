@@ -5,10 +5,17 @@ import com.kotliners.adoptaPerrito.domain.toAnimal
 import com.kotliners.adoptaPerrito.domain.Estatus
 
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+import com.kotliners.adoptaPerrito.dto.response.AnimalDetalleResponse
+import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
 
 import com.kotliners.adoptaPerrito.entities.AnimalEntity
 
 import com.kotliners.adoptaPerrito.repositories.AnimalRepository
+import com.kotliners.adoptaPerrito.repositories.FotoAnimalRepository
+import com.kotliners.adoptaPerrito.repositories.VacunaRepository
+import com.kotliners.adoptaPerrito.repositories.PadecimientoRepository
+import com.kotliners.adoptaPerrito.repositories.AnimalVacunaRepository
+import com.kotliners.adoptaPerrito.repositories.AnimalPadecimientoRepository
 import com.kotliners.adoptaPerrito.repositories.toAnimalEntity
 
 import org.slf4j.Logger
@@ -32,6 +39,21 @@ class AnimalService {
     /** Repositorio para acceder a los datos de los animales */
     @Autowired
     lateinit var animalRepository: AnimalRepository
+
+    @Autowired
+    lateinit var fotoAnimalRepository: FotoAnimalRepository
+
+    @Autowired
+    lateinit var vacunaRepository: VacunaRepository
+
+    @Autowired
+    lateinit var padecimientoRepository: PadecimientoRepository
+
+    @Autowired
+    lateinit var animalVacunaRepository: AnimalVacunaRepository
+
+    @Autowired
+    lateinit var animalPadecimientoRepository: AnimalPadecimientoRepository
 
     /** 
      * TODO: Crea un nuevo animal y lo persiste en la base de datos
@@ -127,6 +149,27 @@ class AnimalService {
         }
         animalRepository.deleteById(uuid)
         return true
+    }
+
+    /**
+     * Obtiene el detalle completo de un animal incluyendo fotos, vacunas y padecimientos.
+     *
+     * @param id ID del animal como string.
+     * @param animal Objeto Animal ya cargado (evita doble consulta).
+     * @return AnimalDetalleResponse con toda la informacion del animal.
+     */
+    fun getAnimalDetalle(id: String, animal: Animal): AnimalDetalleResponse {
+        val uuid = UUID.fromString(id)
+
+        val fotos = fotoAnimalRepository.findByAnimalId(uuid).map { it.foto }
+
+        val vacunaIds = animalVacunaRepository.findByAnimalId(uuid).map { it.vacunaId }
+        val vacunas = vacunaIds.mapNotNull { vacunaRepository.findById(it).orElse(null)?.nombre }
+
+        val padecimientoIds = animalPadecimientoRepository.findByAnimalId(uuid).map { it.padecimientoId }
+        val padecimientos = padecimientoIds.mapNotNull { padecimientoRepository.findById(it).orElse(null)?.nombre }
+
+        return animal.toAnimalDetalleResponse(fotos, vacunas, padecimientos)
     }
 
     /**

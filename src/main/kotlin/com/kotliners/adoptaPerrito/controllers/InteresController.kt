@@ -58,11 +58,13 @@ class InteresController {
         logger.info("Usuario ${usuario.id} manifiesta interés en animal $animalId")
         return try {
             val interes = interesService.manifestarInteres(usuario.id!!, usuario.rol, animalId)
-            val status = if (interes.advertencia != null) 207 else 201
-            ResponseEntity.status(status).body(interes)
+            ResponseEntity.status(201).body(interes)
         } catch (e: IllegalArgumentException) {
             logger.warn("Error al manifestar interes: ${e.message}")
             ResponseEntity.badRequest().body(e.message)
+        } catch (e: IllegalStateException) {
+            logger.warn("Error de estado al manifestar interes: ${e.message}")
+            ResponseEntity.status(503).body(e.message)
         }
     }
 

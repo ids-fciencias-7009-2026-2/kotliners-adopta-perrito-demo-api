@@ -96,7 +96,6 @@ class InteresService {
         logger.info("Interes registrado correctamente")
 
         // Enviar correo al cuidador del animal notificando el interes del adoptante
-        var advertenciaCorreo: String? = null
         val cuidador = usuarioRepository.findById(animal.usuarioId!!).orElse(null)
         val adoptante = usuarioRepository.findById(usuarioUuid).orElse(null)
         if (cuidador != null && adoptante != null) {
@@ -119,7 +118,7 @@ class InteresService {
             )
             if (resultado.isFailure) {
                 logger.error("No se pudo enviar el correo de notificacion: ${resultado.exceptionOrNull()?.message}")
-                advertenciaCorreo = "Tu interes fue registrado pero no se pudo enviar la notificacion por correo al cuidador."
+                throw IllegalStateException("No se pudo notificar al cuidador por correo. Intenta de nuevo mas tarde.")
             }
         }
 
@@ -127,7 +126,7 @@ class InteresService {
             usuarioId = saved.usuarioId.toString(),
             animalId = saved.animalId.toString(),
             fecha = saved.fecha,
-            advertencia = advertenciaCorreo
+            advertencia = null
         )
     }
 
@@ -140,7 +139,7 @@ class InteresService {
      */
     @Transactional
     fun eliminarInteres(usuarioId: String, animalId: String) {
-        logger.info("Eliminando interés: usuario=$usuarioId, animal=$animalId")
+        logger.info("Eliminando interes: usuario=$usuarioId, animal=$animalId")
         val animalUuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Animal no encontrado")
         }
@@ -149,12 +148,38 @@ class InteresService {
         }
 
         if (!interesRepository.existsByUsuarioIdAndAnimalId(usuarioUuid, animalUuid)) {
-            logger.warn("No existe interés para eliminar: usuario=$usuarioId, animal=$animalId")
-            throw IllegalArgumentException("No tienes interés registrado en este animal")
+            logger.warn("No existe interes para eliminar: usuario=$usuarioId, animal=$animalId")
+            throw IllegalArgumentException("No tienes interes registrado en este animal")
         }
 
         interesRepository.deleteById(AnimalInteresId(usuarioId = usuarioUuid, animalId = animalUuid))
-        logger.info("Interés eliminado correctamente")
+        logger.info("Interes eliminado correctamente")
+
+        // Notificar al cuidador que el adoptante ya no esta interesado
+        val animal = animalRepository.findById(animalUuid).orElse(null)
+        val cuidador = animal?.usuarioId?.let { usuarioRepository.findById(it).orElse(null) }
+        val adoptante = usuarioRepository.findById(usuarioUuid).orElse(null)
+        if (animal != null && cuidador != null && adoptante != null) {
+            val asunto = "Actualizacion sobre ${animal.nombre} — interes retirado"
+            val cuerpo = """
+                <html><body>
+                <p>Hola <strong>${cuidador.nombres}</strong>,</p>
+                <p>Te informamos que <strong>${adoptante.nombres} ${adoptante.apellidoPaterno}</strong> ha retirado su interes en <strong>${animal.nombre}</strong>.</p>
+                <p>No te preocupes, tu mascota sigue disponible para otros adoptantes en Colitas Felices.</p>
+                <br>
+                <p>Saludos,<br>Colitas Felices</p>
+                </body></html>
+            """.trimIndent()
+            val resultado = mailAdapter.sendHtmlEmail(
+                to = cuidador.email,
+                subject = asunto,
+                htmlBody = cuerpo,
+                cc = adoptante.email
+            )
+            if (resultado.isFailure) {
+                logger.warn("No se pudo enviar correo de retiro de interes: ${resultado.exceptionOrNull()?.message}")
+            }
+        }
     }
 
     /**
