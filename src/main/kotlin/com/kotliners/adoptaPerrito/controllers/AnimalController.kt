@@ -97,7 +97,24 @@ class AnimalController {
      }
 
     /**
-     * Obtener la lista de animales disponibles
+     * Obtener los animales del cuidador autenticado.
+     * URL:    GET /api/animales/me
+     * Header: Authorization: Bearer <token>
+     */
+    @GetMapping("/me")
+    fun listMyAnimals(
+        @RequestHeader("Authorization", required = false) token: String?
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+            ?: return ResponseEntity.status(401).body("Token invalido")
+        logger.info("Listando animales del cuidador: ${userFound.id}")
+        val animals = animalService.listAnimalsByOwner(userFound.id!!)
+        return ResponseEntity.ok(animals.map { it.toAnimalResponse() })
+    }
+
+    /**
      * - URL: GET /api/animales
      * - Requisitos: token opcional (listar público), soportar filtros en query params
      * - TODOs:

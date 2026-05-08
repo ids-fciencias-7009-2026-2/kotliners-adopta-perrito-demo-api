@@ -129,6 +129,20 @@ class AnimalService {
         return true
     }
 
+    /**
+     * Lista todos los animales registrados por un cuidador especifico.
+     * @param usuarioId ID del cuidador.
+     * @return Lista de animales del cuidador.
+     */
+    fun listAnimalsByOwner(usuarioId: String): List<Animal> {
+        logger.info("Listando animales del cuidador: $usuarioId")
+        val uuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) {
+            logger.warn("ID de usuario no es un UUID valido: $usuarioId")
+            return emptyList()
+        }
+        return animalRepository.findAllByUsuarioId(uuid).map { it.toAnimal() }
+    }
+
     /** 
      * TODO: Lista animales por dueño 
      */
