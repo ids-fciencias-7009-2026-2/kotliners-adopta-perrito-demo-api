@@ -22,10 +22,12 @@ data class AnimalPadecimientoId(
 @IdClass(AnimalPadecimientoId::class)
 data class AnimalPadecimientoEntity(
 
+    /* ID del animal */
     @Id
     @Column(name = "animal_id", nullable = false, updatable = false)
     val animalId: UUID = UUID.randomUUID(),
 
+    /* ID del padecimiento */
     @Id
     @Column(name = "padecimiento_id", nullable = false, updatable = false)
     val padecimientoId: UUID = UUID.randomUUID()

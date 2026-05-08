@@ -15,11 +15,13 @@ import java.util.UUID
 @Table(name = "vacuna")
 data class VacunaEntity(
 
+    /* ID de la vacuna */
     @Id
     @UuidGenerator
     @Column(name = "vacuna_id", updatable = false, nullable = false)
     val id: UUID? = null,
 
+    /* Nombre de la vacuna */
     @Column(name = "nombre", nullable = false, unique = true)
     val nombre: String = ""
 )
