@@ -16,11 +16,13 @@ import java.util.UUID
 @Table(name = "foto_animal")
 data class FotoAnimalEntity(
 
+    /* ID de la foto */
     @Id
     @UuidGenerator
     @Column(name = "foto_id", updatable = false, nullable = false)
     val id: UUID? = null,
 
+    /* ID del animal al que pertenece la foto */
     @Column(name = "animal_id", nullable = false, updatable = false)
     val animalId: UUID = UUID.randomUUID(),
 
@@ -28,6 +30,7 @@ data class FotoAnimalEntity(
     @Column(name = "foto", nullable = false)
     val foto: String = "",
 
+    /** Fecha de creación o subida de la foto */
     @Column(name = "fecha", nullable = false)
     val fecha: LocalDateTime = LocalDateTime.now()
 )
