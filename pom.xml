@@ -96,6 +96,13 @@
 			<artifactId>dotenv-kotlin</artifactId>
 			<version>6.4.1</version>
 		</dependency>
+
+		<!-- Cloudinary para subida de imagenes -->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http45</artifactId>
+			<version>1.39.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
