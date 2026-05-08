@@ -40,7 +40,6 @@ class CloudinaryAdapter(
                 mapOf(
                     "folder" to folder,
                     "resource_type" to "image",
-                    "format" to "auto",
                     "quality" to "auto"
                 )
             )
