@@ -4,6 +4,10 @@ import com.kotliners.adoptaPerrito.services.UsuarioService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.FileSystemResource
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -27,8 +31,10 @@ class FotoController {
     @Autowired
     lateinit var usuarioService: UsuarioService
 
-    /** Directorio donde se guardan las imagenes subidas. */
-    private val uploadDir = Paths.get("src/main/resources/static/uploads")
+    /** Directorio donde se guardan las imagenes subidas. Usa path absoluto relativo al directorio de trabajo. */
+    private val uploadDir = Paths.get(System.getProperty("user.dir"), "uploads").also {
+        if (!Files.exists(it)) Files.createDirectories(it)
+    }
 
     /**
      * Sube una imagen de perfil para el usuario autenticado.
@@ -84,5 +90,24 @@ class FotoController {
 
         val url = "http://localhost:8080/uploads/$nombreArchivo"
         return ResponseEntity.ok(mapOf("url" to url))
+    }
+
+    /**
+     * Sirve una imagen subida por su nombre de archivo.
+     * URL: GET /uploads/{filename}
+     *
+     * @param filename Nombre del archivo a servir.
+     * @return El archivo de imagen como recurso.
+     */
+    @GetMapping("/{filename}")
+    fun servirImagen(@PathVariable filename: String): ResponseEntity<Resource> {
+        val archivo = uploadDir.resolve(filename)
+        if (!Files.exists(archivo)) return ResponseEntity.notFound().build()
+        val resource = FileSystemResource(archivo)
+        val contentType = Files.probeContentType(archivo) ?: "application/octet-stream"
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"$filename\"")
+            .contentType(MediaType.parseMediaType(contentType))
+            .body(resource)
     }
 }

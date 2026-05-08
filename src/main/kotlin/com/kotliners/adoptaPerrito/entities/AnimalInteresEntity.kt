@@ -20,24 +20,25 @@ data class AnimalInteresId(
 
 /**
  * Entidad JPA que representa la tabla "usuario_interes".
- * Registra el interés de un usuario en un animal específico.
+ * Registra el interes de un usuario en un animal especifico.
+ * Los valores por defecto permiten que Hibernate instancie la entidad sin argumentos.
  */
 @Entity
 @Table(name = "usuario_interes")
 @IdClass(AnimalInteresId::class)
 data class AnimalInteresEntity(
 
-    /** ID del usuario que manifestó interés */
+    /** ID del usuario que manifesto interes */
     @Id
     @Column(name = "usuario_id", nullable = false)
-    val usuarioId: UUID,
+    val usuarioId: UUID = UUID.randomUUID(),
 
-    /** ID del animal en el que se manifestó interés */
+    /** ID del animal en el que se manifesto interes */
     @Id
     @Column(name = "animal_id", nullable = false)
-    val animalId: UUID,
+    val animalId: UUID = UUID.randomUUID(),
 
-    /** Fecha en que se registró el interés */
+    /** Fecha en que se registro el interes */
     @Column(name = "fecha", nullable = false)
     val fecha: LocalDateTime = LocalDateTime.now()
 )

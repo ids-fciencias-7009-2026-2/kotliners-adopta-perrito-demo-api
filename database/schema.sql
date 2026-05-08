@@ -148,3 +148,29 @@ CREATE TABLE usuario_interes (
 );
 
 CREATE INDEX idx_usuario_interes_usuario_id ON usuario_interes(usuario_id);
+
+-- =========================
+-- TRIGGER: Solo cuidadores pueden publicar animales
+-- =========================
+
+CREATE OR REPLACE FUNCTION validar_rol_cuidador()
+RETURNS TRIGGER AS $$
+DECLARE
+    rol_usuario rol_enum;
+BEGIN
+    SELECT rol INTO rol_usuario FROM usuario WHERE usuario_id = NEW.usuario_id;
+
+    IF rol_usuario != 'CUIDADOR' THEN
+        RAISE EXCEPTION 'Solo los usuarios con rol CUIDADOR pueden publicar animales.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_validar_rol_cuidador ON animal;
+
+CREATE TRIGGER trg_validar_rol_cuidador
+BEFORE INSERT ON animal
+FOR EACH ROW
+EXECUTE FUNCTION validar_rol_cuidador();

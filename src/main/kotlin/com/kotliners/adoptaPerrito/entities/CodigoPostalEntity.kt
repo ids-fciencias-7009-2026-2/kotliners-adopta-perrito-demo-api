@@ -13,10 +13,10 @@ import java.math.BigDecimal
 @Table(name = "codigo_postal")
 data class CodigoPostalEntity(
 
-    /** Código postal de 5 dígitos (PK) */
+    /** Codigo postal de 5 digitos (PK). Valor por defecto para que Hibernate pueda instanciar la entidad. */
     @Id
     @Column(name = "codigo_postal", length = 5)
-    val codigoPostal: String,
+    val codigoPostal: String = "",
 
     /** Latitud geográfica (mock si no se conoce) */
     @Column(name = "latitud", nullable = false, precision = 10, scale = 6)
