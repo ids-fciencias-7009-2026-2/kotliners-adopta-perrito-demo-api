@@ -15,7 +15,7 @@ class MailAdapter(private val mailSender: JavaMailSender) {
 
     private val logger = LoggerFactory.getLogger(MailAdapter::class.java)
 
-    @Value("\${internal.email.from}")
+    @Value("\${internal.email.from:noreply@colitas.mx}")
     lateinit var fromEmail: String
 
     /**

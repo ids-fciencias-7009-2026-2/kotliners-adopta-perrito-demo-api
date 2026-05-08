@@ -6,6 +6,7 @@ import com.kotliners.adoptaPerrito.entities.UsuarioEntity
 import com.kotliners.adoptaPerrito.repositories.UsuarioRepository
 import com.kotliners.adoptaPerrito.repositories.CodigoPostalRepository
 import com.kotliners.adoptaPerrito.repositories.toUsuarioEntity
+import com.kotliners.adoptaPerrito.utils.PasswordUtil
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -117,38 +118,30 @@ class UsuarioService {
     }
 
     /**
-     * Recupera todos los usuarios registrados en el sistema.
-     *
-     * @return Lista de todos los usuarios.
-     */
-    fun searchAllUsuarios(): List<Usuario> {
-        logger.info("Buscando todos los usuarios")
-        val usuarioEntities = usuarioRepository.findAll()
-        logger.info("Usuarios encontrados: ${usuarioEntities.count()}")
-        return usuarioEntities.map { it.toUsuario() }
-    }
-
-    /**
-     * Autentica a un usuario con email y contrasena hasheada.
+     * Autentica a un usuario con email y contrasena en texto plano.
+     * Busca por email y verifica la contrasena con BCrypt.
      * Si las credenciales son correctas, genera y persiste un nuevo token de sesion.
      *
      * @param email Correo electronico del usuario.
-     * @param password Contrasena hasheada con SHA-256.
+     * @param password Contrasena en texto plano (se verifica contra el hash BCrypt almacenado).
      * @return El usuario autenticado con su token, o null si las credenciales son incorrectas.
      */
     fun login(email: String, password: String): Usuario? {
         logger.info("Intento de login para: $email")
-        val usuarioEntity = usuarioRepository.findUserByPasswordAndEmail(email, password)
-        logger.info("Usuario encontrado: ${usuarioEntity != null}")
-        if (usuarioEntity != null) {
-            val token = tokenGenerator()
-            usuarioEntity.token = token
-            val savedEntity = usuarioRepository.save(usuarioEntity)
-            logger.info("Login exitoso para: ${savedEntity.email}")
-            return savedEntity.toUsuario()
+        val usuarioEntity = usuarioRepository.findByEmail(email)
+        if (usuarioEntity == null) {
+            logger.warn("Login fallido: email no encontrado: $email")
+            return null
         }
-        logger.warn("Login fallido para: $email")
-        return null
+        if (!PasswordUtil.matches(password, usuarioEntity.password)) {
+            logger.warn("Login fallido: contrasena incorrecta para: $email")
+            return null
+        }
+        val token = tokenGenerator()
+        usuarioEntity.token = token
+        val savedEntity = usuarioRepository.save(usuarioEntity)
+        logger.info("Login exitoso para: ${savedEntity.email}")
+        return savedEntity.toUsuario()
     }
 
     /**

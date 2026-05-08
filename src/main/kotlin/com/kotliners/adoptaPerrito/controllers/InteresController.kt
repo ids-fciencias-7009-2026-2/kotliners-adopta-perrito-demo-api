@@ -1,7 +1,9 @@
 package com.kotliners.adoptaPerrito.controllers
 
+import com.kotliners.adoptaPerrito.dto.response.InteresRecibidoResponse
 import com.kotliners.adoptaPerrito.services.InteresService
 import com.kotliners.adoptaPerrito.services.UsuarioService
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,12 +13,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /**
- * Controlador REST para gestionar el interés de usuarios en animales.
+ * Controlador REST para gestionar el interes de usuarios en animales.
  *
  * Expone los endpoints:
- * - POST   /api/animales/{id}/interes  - Manifestar interés en un animal
- * - DELETE /api/animales/{id}/interes  - Eliminar interés en un animal
- * - GET    /api/usuarios/me/intereses  -  Listar animales de interés del usuario autenticado
+ * - POST   /api/animales/{id}/interes   - Manifestar interes en un animal
+ * - DELETE /api/animales/{id}/interes   - Eliminar interes en un animal
+ * - GET    /api/usuarios/me/intereses   - Listar animales de interes del adoptante autenticado
+ * - GET    /api/animales/me/intereses   - Listar adoptantes interesados en animales del cuidador
  */
 @RestController
 class InteresController {
@@ -30,11 +33,10 @@ class InteresController {
     lateinit var usuarioService: UsuarioService
 
     /**
-     * Extrae y valida el token del header Authorization.
-     * @return el usuario encontrado o null si el token es inválido/ausente
+     * Extrae y valida el token del header Authorization usando TokenExtractor.
+     * @return el usuario encontrado o null si el token es invalido/ausente
      */
-    private fun resolveUser(token: String?) =
-        token?.replace("Bearer ", "")?.trim()?.let { usuarioService.findByToken(it) }
+    private fun resolveUser(token: String?) = TokenExtractor.resolveUser(token, usuarioService)
 
     /**
      * Manifestar interés en un animal.
@@ -55,7 +57,8 @@ class InteresController {
 
         logger.info("Usuario ${usuario.id} manifiesta interés en animal $animalId")
         val interes = interesService.manifestarInteres(usuario.id!!, usuario.rol, animalId)
-        return ResponseEntity.status(201).body(interes)
+        val status = if (interes.advertencia != null) 207 else 201
+        return ResponseEntity.status(status).body(interes)
     }
 
     /**
@@ -81,22 +84,50 @@ class InteresController {
     }
 
     /**
-     * Listar los animales de interés del usuario autenticado.
-     * URL:    GET /api/usuarios/me/intereses
+     * Listar los animales de interes del adoptante autenticado (paginado).
+     * URL:    GET /api/usuarios/me/intereses?limit=20&offset=0
      * Header: Authorization: Bearer <token>
      *
-     * @param token Token de sesión del usuario autenticado
-     * @return 200 OK con la lista de animales de interés, 401 si no autenticado
+     * @param token  Token de sesion del usuario autenticado
+     * @param limit  Maximo de resultados (default 20, max 100)
+     * @param offset Numero de resultados a saltar (default 0)
+     * @return 200 OK con la lista paginada de animales de interes, 401 si no autenticado
      */
     @GetMapping("/api/usuarios/me/intereses")
     fun listarIntereses(
-        @RequestHeader("Authorization", required = false) token: String?
+        @RequestHeader("Authorization", required = false) token: String?,
+        @RequestParam(defaultValue = "20") limit: Int,
+        @RequestParam(defaultValue = "0") offset: Int
     ): ResponseEntity<Any> {
         if (token == null) return ResponseEntity.status(401).body("Token requerido")
-        val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token inválido")
+        val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token invalido")
 
-        logger.info("Listando intereses del usuario ${usuario.id}")
-        val intereses = interesService.listarIntereses(usuario.id!!)
+        logger.info("Listando intereses del usuario ${usuario.id} (limit=$limit, offset=$offset)")
+        val intereses = interesService.listarIntereses(usuario.id!!, limit, offset)
+        return ResponseEntity.ok(intereses)
+    }
+
+    /**
+     * Listar los adoptantes interesados en los animales del cuidador autenticado (paginado).
+     * URL:    GET /api/animales/me/intereses?limit=20&offset=0
+     * Header: Authorization: Bearer <token>
+     *
+     * @param token  Token de sesion del cuidador autenticado
+     * @param limit  Maximo de resultados (default 20, max 100)
+     * @param offset Numero de resultados a saltar (default 0)
+     * @return 200 OK con la lista de InteresRecibidoResponse, 401 si no autenticado, 403 si no es cuidador
+     */
+    @GetMapping("/api/animales/me/intereses")
+    fun listarInteresesRecibidos(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @RequestParam(defaultValue = "20") limit: Int,
+        @RequestParam(defaultValue = "0") offset: Int
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token invalido")
+
+        logger.info("Listando intereses recibidos por cuidador ${usuario.id} (limit=$limit, offset=$offset)")
+        val intereses: List<InteresRecibidoResponse> = interesService.listarInteresesRecibidos(usuario.id!!, limit, offset)
         return ResponseEntity.ok(intereses)
     }
 }

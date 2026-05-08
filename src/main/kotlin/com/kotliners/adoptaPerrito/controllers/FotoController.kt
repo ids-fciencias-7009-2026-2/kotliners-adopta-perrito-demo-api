@@ -4,6 +4,7 @@ import com.kotliners.adoptaPerrito.services.UsuarioService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
@@ -11,16 +12,15 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.UUID
 
 /**
- * Controlador para la subida de imagenes de perfil de usuario.
- * Guarda los archivos en src/main/resources/static/uploads/ y
- * devuelve la URL publica para acceder a la imagen.
- *
- * URL base: /uploads
+ * Controlador para la subida y servicio de imagenes de perfil.
+ * Guarda los archivos en el directorio configurado en upload.dir
+ * y los sirve en GET /uploads/{filename}.
  */
 @RestController
 @RequestMapping("/uploads")
@@ -31,22 +31,27 @@ class FotoController {
     @Autowired
     lateinit var usuarioService: UsuarioService
 
-    /** Directorio donde se guardan las imagenes subidas. Usa path absoluto relativo al directorio de trabajo. */
-    private val uploadDir = Paths.get(System.getProperty("user.dir"), "uploads").also {
-        if (!Files.exists(it)) Files.createDirectories(it)
-    }
+    /** URL base del servidor, configurable via app.base-url. */
+    @Value("\${app.base-url:http://localhost:8080}")
+    lateinit var baseUrl: String
+
+    /** Directorio de uploads, configurable via upload.dir. */
+    @Value("\${upload.dir:#{systemProperties['user.dir']}/uploads}")
+    lateinit var uploadDirPath: String
+
+    private val tiposPermitidos = setOf("image/jpeg", "image/jpg", "image/png", "image/webp")
+    private val maxBytes = 5 * 1024 * 1024L
 
     /**
      * Sube una imagen de perfil para el usuario autenticado.
-     * Valida el token, el tipo de archivo y el tamano maximo (5MB).
-     * Guarda el archivo con un nombre unico y devuelve la URL publica.
+     * Valida token, tipo de archivo (jpg/png/webp) y tamano maximo (5MB).
      *
      * URL:    POST /uploads/foto-perfil
      * Header: Authorization: Bearer <token>
      * Body:   multipart/form-data con campo "file"
      *
      * @param token Token de sesion del usuario autenticado.
-     * @param file  Archivo de imagen a subir (jpg, jpeg, png, webp).
+     * @param file  Archivo de imagen a subir.
      * @return URL publica de la imagen subida.
      */
     @PostMapping("/foto-perfil")
@@ -56,40 +61,41 @@ class FotoController {
     ): ResponseEntity<Any> {
         if (token == null) return ResponseEntity.status(401).body("Token requerido")
 
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val usuario = usuarioService.findByToken(cleanToken)
-            ?: return ResponseEntity.status(401).body("Token invalido")
+        val usuario = TokenExtractor.resolveUser(token, usuarioService)
+            ?: return ResponseEntity.status(401).body(if (token == null) "Token requerido" else "Token invalido")
 
-        // Validar tipo de archivo
         val contentType = file.contentType ?: ""
-        val tiposPermitidos = setOf("image/jpeg", "image/jpg", "image/png", "image/webp")
         if (contentType !in tiposPermitidos) {
             return ResponseEntity.badRequest().body("Solo se permiten imagenes JPG, PNG o WebP.")
         }
 
-        // Validar tamano maximo (5MB)
-        val maxBytes = 5 * 1024 * 1024L
         if (file.size > maxBytes) {
             return ResponseEntity.badRequest().body("La imagen no puede superar 5MB.")
         }
 
-        // Crear directorio si no existe
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir)
-            logger.info("Directorio de uploads creado: $uploadDir")
+        val uploadDir = Paths.get(uploadDirPath)
+        if (!Files.exists(uploadDir)) Files.createDirectories(uploadDir)
+
+        // Nombre UUID para evitar colisiones y path traversal
+        val extension = when (contentType) {
+            "image/jpeg", "image/jpg" -> "jpg"
+            "image/png" -> "png"
+            "image/webp" -> "webp"
+            else -> "jpg"
+        }
+        val nombreArchivo = "${UUID.randomUUID()}.$extension"
+        val destino = uploadDir.resolve(nombreArchivo).normalize()
+
+        // Verificar que el destino esta dentro del directorio de uploads (proteccion path traversal)
+        if (!destino.startsWith(uploadDir.normalize())) {
+            logger.warn("Intento de path traversal detectado")
+            return ResponseEntity.badRequest().body("Nombre de archivo invalido.")
         }
 
-        // Generar nombre unico para el archivo
-        val extension = contentType.substringAfter("/")
-        val nombreArchivo = "${UUID.randomUUID()}.$extension"
-        val destino = uploadDir.resolve(nombreArchivo)
-
-        // Guardar archivo
         file.transferTo(destino.toFile())
         logger.info("Imagen guardada: $nombreArchivo para usuario ${usuario.id}")
 
-        val url = "http://localhost:8080/uploads/$nombreArchivo"
-        return ResponseEntity.ok(mapOf("url" to url))
+        return ResponseEntity.ok(mapOf("url" to "$baseUrl/uploads/$nombreArchivo"))
     }
 
     /**
@@ -101,8 +107,18 @@ class FotoController {
      */
     @GetMapping("/{filename}")
     fun servirImagen(@PathVariable filename: String): ResponseEntity<Resource> {
-        val archivo = uploadDir.resolve(filename)
-        if (!Files.exists(archivo)) return ResponseEntity.notFound().build()
+        // Proteccion contra path traversal
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            return ResponseEntity.badRequest().build()
+        }
+
+        val uploadDir = Paths.get(uploadDirPath)
+        val archivo = uploadDir.resolve(filename).normalize()
+
+        if (!archivo.startsWith(uploadDir.normalize()) || !Files.exists(archivo)) {
+            return ResponseEntity.notFound().build()
+        }
+
         val resource = FileSystemResource(archivo)
         val contentType = Files.probeContentType(archivo) ?: "application/octet-stream"
         return ResponseEntity.ok()

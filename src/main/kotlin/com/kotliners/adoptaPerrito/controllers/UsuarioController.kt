@@ -7,11 +7,14 @@ import com.kotliners.adoptaPerrito.dto.request.UpdateUsuarioRequest
 import com.kotliners.adoptaPerrito.dto.response.RegisterResponse
 import com.kotliners.adoptaPerrito.dto.response.LogoutResponse
 import com.kotliners.adoptaPerrito.dto.response.LoginResponse
-import com.kotliners.adoptaPerrito.services.UsuarioService      
+import com.kotliners.adoptaPerrito.dto.response.UsuarioResponse
+import com.kotliners.adoptaPerrito.dto.response.toUsuarioResponse
+import com.kotliners.adoptaPerrito.services.UsuarioService
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
+import com.kotliners.adoptaPerrito.utils.PasswordUtil      
 
 import jakarta.validation.Valid
 
-import java.security.MessageDigest
 import java.time.LocalDateTime
 
 import org.slf4j.Logger
@@ -52,13 +55,6 @@ class UsuarioController {
     lateinit var userService: UsuarioService
 
     /**
-     * Conjunto de tokens activos en memoria.
-     * En una implementación de producción, esto debería estar en Redis o base de datos.
-     * Actualmente se usa para mantener un registro simple de sesiones activas.
-     */
-    val activeTokens = mutableSetOf<String>()
-
-    /**
      * Endpoint para obtener la información del usuario actualmente autenticado.
      * Este endpoint permite recuperar los datos del usuario a partir del token
      * de sesión enviado en el header Authorization.
@@ -73,45 +69,20 @@ class UsuarioController {
     fun getCurrentUser(
         @RequestHeader("Authorization", required = false) token: String?
     ): ResponseEntity<Any> {
-        logger.info("Token recibido en /me: $token")
-        if (token == null) return ResponseEntity.status(401).body("Token requerido")
-
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val userFound = userService.findByToken(cleanToken)
-        if (userFound == null) {
-            logger.warn("Token inválido en /me")
-            return ResponseEntity.status(401).body("Token inválido")
-        }
+        logger.info("Token recibido en /me: ${token?.take(8)}...")
+        val userFound = TokenExtractor.resolveUser(token, userService)
+            ?: return ResponseEntity.status(401).body(if (token == null) "Token requerido" else "Token inválido")
 
         logger.info("Usuario autenticado: ${userFound.email}")
-        return ResponseEntity.ok(
-            mapOf(
-                "fotoPerfil" to userFound.fotoPerfil,
-                "id" to userFound.id,
-                "email" to userFound.email,
-                "username" to userFound.username,
-                "rol" to userFound.rol,
-                "nombres" to userFound.nombres,
-                "apellidoPaterno" to userFound.apellidoPaterno,
-                "apellidoMaterno" to userFound.apellidoMaterno,
-                "codigoPostal" to userFound.codigoPostal,
-                "curp" to userFound.curp
-            )
-        )
+        return ResponseEntity.ok(userFound.toUsuarioResponse())
     }
 
     /**
-     * Función auxiliar para hash de contraseñas usando SHA-256. 
-     * 
-     * @param password Contraseña en texto plano.
-     * @return Contraseña hasheada en formato hexadecimal.
+     * Hashea una contrasena usando BCrypt (incluye salt automaticamente).
+     * @param password Contrasena en texto plano.
+     * @return Hash BCrypt de la contrasena.
      */
-    private fun hashPassword(password: String): String {
-        val bytes = MessageDigest
-            .getInstance("SHA-256")
-            .digest(password.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
-    }
+    private fun hashPassword(password: String): String = PasswordUtil.hash(password)
 
     /**
      * Endpoint para registrar un nuevo usuario en el sistema.
@@ -129,13 +100,13 @@ class UsuarioController {
     fun agregaUsuario(
         @Valid @RequestBody createUsuarioRequest: CreateUsuarioRequest
     ): ResponseEntity<RegisterResponse> {
-        logger.info("Solicitud de registro recibida: $createUsuarioRequest")
+        logger.info("Solicitud de registro recibida para: ${createUsuarioRequest.email}")
         val usuarioCreado = createUsuarioRequest.toUsuario()
-        val usuarioConPasswordHash = usuarioCreado.copy(password = hashPassword(usuarioCreado.password))
+        val usuarioConPasswordHash = usuarioCreado.copy(password = PasswordUtil.hash(usuarioCreado.password))
         val usuarioGuardado = userService.addNewUsuario(usuarioConPasswordHash)
-        logger.info("Usuario registrado exitosamente: $usuarioGuardado")
+        logger.info("Usuario registrado exitosamente: ${usuarioGuardado.email}")
         return ResponseEntity.status(201).body(
-            RegisterResponse(usuario = usuarioGuardado, mensaje = "Usuario registrado exitosamente")
+            RegisterResponse(usuario = usuarioGuardado.toUsuarioResponse(), mensaje = "Usuario registrado exitosamente")
         )
     }
 
@@ -163,15 +134,12 @@ class UsuarioController {
     fun login(
         @Valid @RequestBody loginRequest: LoginRequest
     ): ResponseEntity<Any> {
-        val passwordHash = hashPassword(loginRequest.password)
         logger.info("Intento de login con: ${loginRequest.email}")
 
-        val userFound = userService.login(loginRequest.email, passwordHash)
-        logger.info("Usuario encontrado: ${userFound != null}")
+        val userFound = userService.login(loginRequest.email, loginRequest.password)
 
         return if (userFound != null) {
             logger.info("Login exitoso para: ${userFound.email}")
-            activeTokens.add(userFound.token.orEmpty())
             ResponseEntity.ok(LoginResponse(userFound.token.orEmpty()))
         } else {
             logger.warn("Login fallido para: ${loginRequest.email}")
@@ -205,18 +173,11 @@ class UsuarioController {
     fun logout(
         @RequestHeader("Authorization", required = false) token: String?
     ): ResponseEntity<Any> {
-        logger.info("Solicitud de logout con token: $token")
-        if (token == null) return ResponseEntity.status(401).body("Token requerido")
-
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val userFound = userService.findByToken(cleanToken)
-        if (userFound == null) {
-            logger.warn("Token inválido para logout")
-            return ResponseEntity.status(401).body("Token inválido")
-        }
+        logger.info("Solicitud de logout con token: ${token?.take(8)}...")
+        val userFound = TokenExtractor.resolveUser(token, userService)
+            ?: return ResponseEntity.status(401).body(if (token == null) "Token requerido" else "Token inválido")
 
         userService.invalidateToken(userFound.id)
-        activeTokens.remove(cleanToken)
         logger.info("Token invalidado para: ${userFound.email}")
 
         return ResponseEntity.ok(
@@ -245,19 +206,13 @@ class UsuarioController {
         @RequestBody  @Valid updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Any> {
         logger.info("Solicitud de actualización recibida")
-        if (token == null) return ResponseEntity.status(401).body("Token requerido")
-
-        val cleanToken = token.replace("Bearer ", "").trim()
-        val userFound = userService.findByToken(cleanToken)
-        if (userFound == null) {
-            logger.warn("Token inválido en PUT /usuarios")
-            return ResponseEntity.status(401).body("Token inválido")
-        }
+        val userFound = TokenExtractor.resolveUser(token, userService)
+            ?: return ResponseEntity.status(401).body(if (token == null) "Token requerido" else "Token inválido")
 
         val usuarioActualizado = userService.updateUsuario(userFound.id ?: return ResponseEntity.status(401).body("Token inválido"), updateUsuarioRequest)
         return if (usuarioActualizado != null) {
             logger.info("Usuario actualizado: ${usuarioActualizado.id}")
-            ResponseEntity.ok(usuarioActualizado)
+            ResponseEntity.ok(usuarioActualizado.toUsuarioResponse())
         } else {
             ResponseEntity.status(404).body("Usuario no encontrado")
         }
