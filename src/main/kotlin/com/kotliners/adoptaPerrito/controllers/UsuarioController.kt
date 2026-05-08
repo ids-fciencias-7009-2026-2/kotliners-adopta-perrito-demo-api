@@ -67,7 +67,7 @@ class UsuarioController {
      */
     @GetMapping("/me")
     fun getCurrentUser(
-        @RequestHeader("Authorization", required = false) token: String?
+        @RequestHeader("Authorization", required = true) token: String?
     ): ResponseEntity<Any> {
         logger.info("Token recibido en /me: ${token?.take(8)}...")
         val userFound = TokenExtractor.resolveUser(token, userService)
@@ -171,7 +171,7 @@ class UsuarioController {
      */
     @PostMapping("/logout")
     fun logout(
-        @RequestHeader("Authorization", required = false) token: String?
+        @RequestHeader("Authorization", required = true) token: String?
     ): ResponseEntity<Any> {
         logger.info("Solicitud de logout con token: ${token?.take(8)}...")
         val userFound = TokenExtractor.resolveUser(token, userService)
@@ -202,7 +202,7 @@ class UsuarioController {
      */
     @PutMapping
     fun updateUsuario(
-        @RequestHeader("Authorization", required = false) token: String?,
+        @RequestHeader("Authorization", required = true) token: String?,
         @RequestBody  @Valid updateUsuarioRequest: UpdateUsuarioRequest
     ): ResponseEntity<Any> {
         logger.info("Solicitud de actualización recibida")
