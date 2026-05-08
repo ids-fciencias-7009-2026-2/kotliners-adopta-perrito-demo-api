@@ -54,7 +54,7 @@ class InteresController {
         val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token inválido")
 
         logger.info("Usuario ${usuario.id} manifiesta interés en animal $animalId")
-        val interes = interesService.manifestarInteres(usuario.id!!, animalId)
+        val interes = interesService.manifestarInteres(usuario.id!!, usuario.rol, animalId)
         return ResponseEntity.status(201).body(interes)
     }
 
