@@ -56,9 +56,14 @@ class InteresController {
         val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token inválido")
 
         logger.info("Usuario ${usuario.id} manifiesta interés en animal $animalId")
-        val interes = interesService.manifestarInteres(usuario.id!!, usuario.rol, animalId)
-        val status = if (interes.advertencia != null) 207 else 201
-        return ResponseEntity.status(status).body(interes)
+        return try {
+            val interes = interesService.manifestarInteres(usuario.id!!, usuario.rol, animalId)
+            val status = if (interes.advertencia != null) 207 else 201
+            ResponseEntity.status(status).body(interes)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Error al manifestar interes: ${e.message}")
+            ResponseEntity.badRequest().body(e.message)
+        }
     }
 
     /**
@@ -79,8 +84,13 @@ class InteresController {
         val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token inválido")
 
         logger.info("Usuario ${usuario.id} elimina interés en animal $animalId")
-        interesService.eliminarInteres(usuario.id!!, animalId)
-        return ResponseEntity.ok("Interés eliminado correctamente")
+        return try {
+            interesService.eliminarInteres(usuario.id!!, animalId)
+            ResponseEntity.ok("Interes eliminado correctamente")
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Error al eliminar interes: ${e.message}")
+            ResponseEntity.badRequest().body(e.message)
+        }
     }
 
     /**

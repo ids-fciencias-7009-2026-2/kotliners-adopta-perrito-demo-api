@@ -61,8 +61,12 @@ class InteresService {
     @Transactional
     fun manifestarInteres(usuarioId: String, usuarioRol: Rol, animalId: String): InteresResponse {
         logger.info("Registrando interes: usuario=$usuarioId, animal=$animalId")
-        val animalUuid = UUID.fromString(animalId)
-        val usuarioUuid = UUID.fromString(usuarioId)
+        val animalUuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Animal no encontrado")
+        }
+        val usuarioUuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Usuario no valido")
+        }
 
         // Solo los adoptantes pueden manifestar interes
         if (usuarioRol != Rol.ADOPTANTE) {
@@ -137,8 +141,12 @@ class InteresService {
     @Transactional
     fun eliminarInteres(usuarioId: String, animalId: String) {
         logger.info("Eliminando interés: usuario=$usuarioId, animal=$animalId")
-        val animalUuid = UUID.fromString(animalId)
-        val usuarioUuid = UUID.fromString(usuarioId)
+        val animalUuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Animal no encontrado")
+        }
+        val usuarioUuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Usuario no valido")
+        }
 
         if (!interesRepository.existsByUsuarioIdAndAnimalId(usuarioUuid, animalUuid)) {
             logger.warn("No existe interés para eliminar: usuario=$usuarioId, animal=$animalId")

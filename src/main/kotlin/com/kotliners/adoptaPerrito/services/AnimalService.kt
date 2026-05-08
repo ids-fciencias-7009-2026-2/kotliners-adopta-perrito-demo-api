@@ -52,10 +52,13 @@ class AnimalService {
      */
     fun getAnimalById(id: String): Animal? {
         logger.info("Buscando animal por ID: $id")
-        var uuid = UUID.fromString(id)
+        val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
+            logger.warn("ID de animal no es un UUID valido: $id")
+            return null
+        }
         val entity = animalRepository.findById(uuid).orElse(null)
         if (entity == null) {
-            logger.warn("No se encontró el animal con ID: $id")
+            logger.warn("No se encontro el animal con ID: $id")
             return null
         }
         return entity.toAnimal()
@@ -70,7 +73,10 @@ class AnimalService {
      */
     fun updateAnimal(id: String, updates: UpdateAnimalRequest): Animal? {
         logger.info("Actualizando animal por ID: $id")
-        val uuid = UUID.fromString(id)
+        val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
+            logger.warn("ID de animal no es un UUID valido: $id")
+            return null
+        }
         val entity = animalRepository.findById(uuid).orElse(null)
         if (entity == null) {
             logger.warn("No se encontró el animal con ID: $id")
@@ -100,7 +106,10 @@ class AnimalService {
      */
     fun deleteAnimal(id: String): Boolean {
         logger.info("Eliminando animal por ID: $id")
-        val uuid = UUID.fromString(id)
+        val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
+            logger.warn("ID de animal no es un UUID valido: $id")
+            return false
+        }
         if (!animalRepository.existsById(uuid)) {
             logger.warn("No existe el animal con ID: $id")
             return false
