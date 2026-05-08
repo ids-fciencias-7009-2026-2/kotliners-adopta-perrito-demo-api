@@ -30,12 +30,12 @@ data class AnimalInteresEntity(
 
     /** ID del usuario que manifesto interes */
     @Id
-    @Column(name = "usuario_id", nullable = false)
+    @Column(name = "usuario_id", nullable = false, updatable = false)
     val usuarioId: UUID = UUID.randomUUID(),
 
     /** ID del animal en el que se manifesto interes */
     @Id
-    @Column(name = "animal_id", nullable = false)
+    @Column(name = "animal_id", nullable = false, updatable = false)
     val animalId: UUID = UUID.randomUUID(),
 
     /** Fecha en que se registro el interes */

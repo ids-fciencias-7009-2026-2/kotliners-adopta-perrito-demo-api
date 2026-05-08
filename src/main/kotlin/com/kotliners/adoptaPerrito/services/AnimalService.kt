@@ -2,6 +2,7 @@ package com.kotliners.adoptaPerrito.services
 
 import com.kotliners.adoptaPerrito.domain.Animal
 import com.kotliners.adoptaPerrito.domain.toAnimal
+import com.kotliners.adoptaPerrito.domain.Estatus
 
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 
@@ -34,15 +35,25 @@ class AnimalService {
 
     /** 
      * TODO: Crea un nuevo animal y lo persiste en la base de datos
+     * @param animal Animal de dominio a guardar
+     * @return El animal guardado con su ID asignado
      */
-    // fun addNewAnimal(animal: Animal): Animal {
-    // }
+    fun addNewAnimal(animal: Animal): Animal {
+        logger.info("Creando nuevo animal: ${animal.nombre}")
+        val entity = animal.toAnimalEntity()
+        val saved = animalRepository.save(entity)
+        logger.info("Animal creado con ID: ${saved.id}")
+        return saved.toAnimal()
+    }
 
     /** 
-     * TODO: Lista todos los animales 
+     * TODO: Lista todos los animales
+     * @return Lista de animales de dominio
      */
-    // fun searchAllAnimals(): List<Animal> {
-    // }
+    fun searchAllAnimals(): List<Animal> {
+        logger.info("Listando todos los animales")
+        return animalRepository.findAll().map { it.toAnimal() }
+    }
 
     /** 
      * Busca un animal por su ID y lo devuelve como un objeto de dominio. 

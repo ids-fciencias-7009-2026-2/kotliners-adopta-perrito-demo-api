@@ -1,8 +1,13 @@
 package com.kotliners.adoptaPerrito.controllers
 
-// import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
+import com.kotliners.adoptaPerrito.domain.Animal
+import com.kotliners.adoptaPerrito.domain.Estatus
+import com.kotliners.adoptaPerrito.domain.Sexo
+
+import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -15,6 +20,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.web.bind.annotation.*
+
+import java.time.LocalDateTime
 
 /**
  * Controlador REST para manejar las operaciones relacionadas con los animales disponibles para adopción.
@@ -44,6 +51,7 @@ class AnimalController {
     /**
      * Crear un nuevo animal
      * - URL: POST /api/animales
+     * - Header: Authorization: Bearer <token>
      * - Requisitos: header `Authorization: Bearer <token>` obligatorio
      * - TODOs:
      *   - Validar y limpiar token (quitar "Bearer ") y buscar usuario con `UsuarioService`
@@ -51,14 +59,42 @@ class AnimalController {
      *   - Mapear DTO -> `Animal` (domain) y llamar `animalService.createAnimal`
      *   - Retornar `201 Created` con el recurso creado o error 400/401 según corresponda
      */
-    // @PostMapping
-    // fun createAnimal(
-    //     @RequestHeader("Authorization", required = true) token: String?,
-    //     @Valid @RequestBody createRequest: CreateAnimalRequest
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: validar token, mapear DTO, llamar servicio y devolver ResponseEntity
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @PostMapping
+    fun createAnimal(
+         @RequestHeader("Authorization", required = true) token: String?,
+         @Valid @RequestBody createRequest: CreateAnimalRequest
+     ): ResponseEntity<Any> {
+        logger.info("Solicitud para crear animal")
+        if (token == null) {
+            logger.warn("Intento de crear animal sin token")
+            return ResponseEntity.status(401).body("Token requerido")
+        }
+
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+        if (userFound == null) {
+            logger.warn("Token inválido al crear animal")
+            return ResponseEntity.status(401).body("Token inválido")
+        }
+
+        val animal = Animal(
+            nombre = createRequest.nombre,
+            especie = createRequest.especie,
+            raza = createRequest.raza,
+            fechaNacimiento = createRequest.fechaNacimiento,
+            sexo = createRequest.sexo,
+            descripcion = createRequest.descripcion,
+            estatus = Estatus.DISPONIBLE,
+            usuarioId = userFound.id!!,
+            esterilizado = createRequest.esterilizado,
+            fechaRegistro = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+
+        val created = animalService.addNewAnimal(animal)
+        logger.info("Animal creado correctamente con ID: ${created.id}")
+        return ResponseEntity.status(201).body(created.toAnimalResponse())
+     }
 
     /**
      * Obtener la lista de animales disponibles
@@ -68,13 +104,15 @@ class AnimalController {
      *   - Implementar parámetros de paginación/filtros (opcional)
      *   - Llamar `animalService.listAllAnimals()` y mapear a DTOs de respuesta
      */
-    // @GetMapping
-    // fun listAnimals(
-    //     @RequestHeader("Authorization", required = false) token: String?
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: obtener lista desde servicio y devolver 200
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @GetMapping
+    fun listAnimals(
+         @RequestHeader("Authorization", required = false) token: String?
+     ): ResponseEntity<Any> {
+        logger.info("Solicitud para listar animales")
+        val animals = animalService.searchAllAnimals()
+        val response = animals.map { it.toAnimalResponse() }
+        return ResponseEntity.ok(response)
+     }
 
     /**
      * Obtener detalles de un animal específico
@@ -84,14 +122,19 @@ class AnimalController {
      *   - Llamar `animalService.getAnimalById(id)`
      *   - Devolver 200 con el detalle o 404 si no existe
      */
-    // @GetMapping("/{id}")
-    // fun getAnimal(
-    //     @RequestHeader("Authorization", required = false) token: String?,
-    //     @PathVariable id: String
-    // ): ResponseEntity<Any> {
-    //     // TODO: Implementar: recuperar por id y devolver 200/404
-    //     return ResponseEntity.status(501).body("Not implemented")
-    // }
+    @GetMapping("/{id}")
+    fun getAnimal(
+         @RequestHeader("Authorization", required = false) token: String?,
+         @PathVariable id: String
+     ): ResponseEntity<Any> {
+        logger.info("Solicitud para obtener animal con ID: $id")
+        val animal = animalService.getAnimalById(id)
+        if (animal == null) {
+            logger.warn("Animal no encontrado: $id")
+            return ResponseEntity.status(404).body("Animal no encontrado")
+        }
+        return ResponseEntity.ok(animal.toAnimalResponse())
+     }
 
     /**
      * Actualizar la información de un animal
