@@ -3,6 +3,7 @@ package com.kotliners.adoptaPerrito.dto.request
 import com.kotliners.adoptaPerrito.domain.Sexo
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 import java.time.LocalDate
 
 /**
@@ -10,12 +11,12 @@ import java.time.LocalDate
  */
 class CreateAnimalRequest (
 
-    /* Nombre del animal */
     @field:NotBlank(message = "Por favor, ingresa el nombre del animal.")
     val nombre: String,
 
-    /* Especie del animal (perro, gato, etc.) */
+    /** Solo se aceptan "Perro" o "Gato" */
     @field:NotBlank(message = "Por favor, ingresa la especie del animal.")
+    @field:Pattern(regexp = "(?i)perro|gato", message = "La especie debe ser Perro o Gato.")
     val especie: String,
 
     /* Raza del animal (opcional) */

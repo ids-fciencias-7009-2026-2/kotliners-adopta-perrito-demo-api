@@ -10,6 +10,9 @@ import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
 import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
+import com.kotliners.adoptaPerrito.dto.response.VacunaResponse
+import com.kotliners.adoptaPerrito.dto.response.PadecimientoResponse
+import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -22,6 +25,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 import java.time.LocalDateTime
 
@@ -46,9 +50,11 @@ class AnimalController {
     @Autowired
     lateinit var animalService: AnimalService
 
-    /* Servicio para validar token y obtener el usuario autenticado */
     @Autowired
     lateinit var userService: UsuarioService
+
+    @Autowired
+    lateinit var cloudinaryAdapter: CloudinaryAdapter
 
     /**
      * Crear un nuevo animal
@@ -123,7 +129,11 @@ class AnimalController {
         logger.info("Listando animales del cuidador: ${userFound.id}")
         try {
             val animals = animalService.listAnimalsByOwner(userFound.id!!, userFound.rol)
-            return ResponseEntity.ok(animals.map { it.toAnimalResponse() })
+            return ResponseEntity.ok(animals.map { animal ->
+                val foto = animalService.getPrimeraFoto(animal.id ?: "")
+                val interesados = animalService.getNumInteresados(animal.id ?: "")
+                animal.toAnimalResponse(foto, interesados)
+            })
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
@@ -153,11 +163,18 @@ class AnimalController {
             if (rol == Rol.CUIDADOR) {
                 logger.info("Usuario con rol CUIDADOR listando sus animales")
                 val animals = animalService.listAnimalsByOwner(userFound.id!!, rol)
-                return ResponseEntity.ok(animals.map { it.toAnimalResponse() })
+                return ResponseEntity.ok(animals.map { animal ->
+                    val foto = animalService.getPrimeraFoto(animal.id ?: "")
+                    val interesados = animalService.getNumInteresados(animal.id ?: "")
+                    animal.toAnimalResponse(foto, interesados)
+                })
             } else {
                 logger.info("Usuario con rol $rol listando todos los animales disponibles")
                 val animals = animalService.searchAllAnimals(rol)
-                return ResponseEntity.ok(animals.map { it.toAnimalResponse() })
+                return ResponseEntity.ok(animals.map { animal ->
+                    val foto = animalService.getPrimeraFoto(animal.id ?: "")
+                    animal.toAnimalResponse(foto)
+                })
             }
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(403).body(e.message ?: "No autorizado")
@@ -255,8 +272,7 @@ class AnimalController {
      *      - 404 Not Found
      */
     @DeleteMapping
-    fun deleteAnimal(
-        @RequestHeader("Authorization", required = true) token: String?,
+    fun deleteAnimal(        @RequestHeader("Authorization", required = true) token: String?,
         @Valid @RequestBody deleteAnimalRequest: DeleteAnimalRequest
     ): ResponseEntity<Any> {
         val id = deleteAnimalRequest.animalId
@@ -283,4 +299,50 @@ class AnimalController {
             return ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
     }
+
+    /**
+     * Actualiza las vacunas de un animal (reemplaza la lista completa).
+     * URL: PUT /api/animales/{id}/vacunas
+     * Body: ["Rabia", "Moquillo"]
+     */
+    @PutMapping("/{id}/vacunas")
+    fun updateVacunas(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @PathVariable id: String,
+        @RequestBody nombres: List<String>
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken) ?: return ResponseEntity.status(401).body("Token invalido")
+        return try {
+            animalService.updateVacunas(id, nombres, userFound.id!!, userFound.rol)
+            ResponseEntity.ok("Vacunas actualizadas")
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+        }
+    }
+
+    /**
+     * Actualiza los padecimientos de un animal (reemplaza la lista completa).
+     * URL: PUT /api/animales/{id}/padecimientos
+     * Body: ["Diabetes", "Artritis"]
+     */
+    @PutMapping("/{id}/padecimientos")
+    fun updatePadecimientos(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @PathVariable id: String,
+        @RequestBody nombres: List<String>
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken) ?: return ResponseEntity.status(401).body("Token invalido")
+        return try {
+            animalService.updatePadecimientos(id, nombres, userFound.id!!, userFound.rol)
+            ResponseEntity.ok("Padecimientos actualizados")
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+        }
+    }
 }
+
+// Foto endpoints added via append
