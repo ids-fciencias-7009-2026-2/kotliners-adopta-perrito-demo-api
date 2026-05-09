@@ -47,6 +47,9 @@ class InteresService {
     @Autowired
     lateinit var mailAdapter: MailAdapter
 
+    @Autowired
+    lateinit var fotoAnimalRepository: com.kotliners.adoptaPerrito.repositories.FotoAnimalRepository
+
     /**
      * Registra el interes de un usuario ADOPTANTE en un animal DISPONIBLE.
      * Valida que el usuario sea ADOPTANTE y que el animal exista y este disponible.
@@ -212,7 +215,9 @@ class InteresService {
                     descripcion = animal.descripcion,
                     estatus = animal.estatus.name,
                     esterilizado = animal.esterilizado,
-                    fechaInteres = interes.fecha
+                    fechaInteres = interes.fecha,
+                    fotoPortada = fotoAnimalRepository.findByAnimalId(animal.id!!).firstOrNull()?.foto,
+                    fechaRegistro = animal.fechaRegistro
                 )
             }
     }

@@ -56,6 +56,9 @@ class AnimalService {
     @Autowired
     lateinit var animalPadecimientoRepository: AnimalPadecimientoRepository
 
+    @Autowired
+    lateinit var animalInteresRepository: com.kotliners.adoptaPerrito.repositories.AnimalInteresRepository
+
     /** 
      * Crea un nuevo animal y lo persiste en la base de datos
      * 
@@ -88,7 +91,9 @@ class AnimalService {
             logger.warn("Intento de listar animales por usuario sin rol ADOPTANTE: $requesterRole")
             throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden listar todos los animales")
         }
-        return animalRepository.findAll().map { it.toAnimal() }
+        return animalRepository.findAll()
+            .filter { it.estatus != com.kotliners.adoptaPerrito.domain.Estatus.ADOPTADO && !it.inapropiado }
+            .map { it.toAnimal() }
     }
 
     /** 
@@ -224,7 +229,98 @@ class AnimalService {
         val padecimientoIds = animalPadecimientoRepository.findByAnimalId(uuid).map { it.padecimientoId }
         val padecimientos = padecimientoIds.mapNotNull { padecimientoRepository.findById(it).orElse(null)?.nombre }
 
-        return animal.toAnimalDetalleResponse(fotos, vacunas, padecimientos)
+        return animal.toAnimalDetalleResponse(fotos, vacunas, padecimientos, getNumInteresados(id))
+    }
+
+    /**
+     * Cuenta el numero de adoptantes interesados en un animal.
+     */
+    fun getNumInteresados(animalId: String): Int {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { return 0 }
+        return animalInteresRepository.findByAnimalId(uuid).size
+    }
+
+    /**
+     * Obtiene la URL de la primera foto de un animal, o null si no tiene.
+     */
+    fun getPrimeraFoto(animalId: String): String? {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { return null }
+        return fotoAnimalRepository.findByAnimalId(uuid).firstOrNull()?.foto
+    }
+
+    /**
+     * Sube una foto de un animal a Cloudinary y la persiste en foto_animal.
+     */
+    fun agregarFoto(animalId: String, file: org.springframework.web.multipart.MultipartFile, usuarioId: String, usuarioRol: com.kotliners.adoptaPerrito.domain.Rol, cloudinary: com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter): String {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { throw IllegalArgumentException("Animal no encontrado") }
+        val animal = animalRepository.findById(uuid).orElse(null) ?: throw IllegalArgumentException("Animal no encontrado")
+        if (usuarioRol != com.kotliners.adoptaPerrito.domain.Rol.CUIDADOR || animal.usuarioId.toString() != usuarioId) {
+            throw IllegalArgumentException("No autorizado para modificar este animal")
+        }
+        val resultado = cloudinary.subirImagen(file, folder = "colitas/animales")
+        if (resultado.isFailure) throw IllegalArgumentException("No se pudo subir la imagen: ${resultado.exceptionOrNull()?.message}")
+        val url = resultado.getOrThrow()
+        fotoAnimalRepository.save(com.kotliners.adoptaPerrito.entities.FotoAnimalEntity(animalId = uuid, foto = url))
+        logger.info("Foto agregada para animal $animalId: $url")
+        return url
+    }
+
+    /**
+     * Elimina una foto de un animal por su URL.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    fun eliminarFoto(animalId: String, url: String, usuarioId: String, usuarioRol: com.kotliners.adoptaPerrito.domain.Rol) {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { throw IllegalArgumentException("Animal no encontrado") }
+        val animal = animalRepository.findById(uuid).orElse(null) ?: throw IllegalArgumentException("Animal no encontrado")
+        if (usuarioRol != com.kotliners.adoptaPerrito.domain.Rol.CUIDADOR || animal.usuarioId.toString() != usuarioId) {
+            throw IllegalArgumentException("No autorizado para modificar este animal")
+        }
+        val fotos = fotoAnimalRepository.findByAnimalId(uuid)
+        val foto = fotos.find { it.foto == url } ?: throw IllegalArgumentException("Foto no encontrada")
+        fotoAnimalRepository.deleteById(foto.id!!)
+        logger.info("Foto eliminada para animal $animalId: $url")
+    }
+
+    /**
+     * Actualiza las vacunas de un animal reemplazando la lista completa.
+     * Crea vacunas nuevas si no existen en el catalogo.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    fun updateVacunas(animalId: String, nombres: List<String>, usuarioId: String, usuarioRol: com.kotliners.adoptaPerrito.domain.Rol) {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { throw IllegalArgumentException("Animal no encontrado") }
+        val animal = animalRepository.findById(uuid).orElse(null) ?: throw IllegalArgumentException("Animal no encontrado")
+        if (usuarioRol != com.kotliners.adoptaPerrito.domain.Rol.CUIDADOR || animal.usuarioId.toString() != usuarioId) {
+            throw IllegalArgumentException("No autorizado para modificar este animal")
+        }
+        // Eliminar relaciones actuales
+        animalVacunaRepository.deleteByAnimalId(uuid)
+        // Crear o reutilizar vacunas del catalogo y asociar
+        nombres.filter { it.isNotBlank() }.forEach { nombre ->
+            val vacuna = vacunaRepository.findByNombre(nombre.trim())
+                ?: vacunaRepository.save(com.kotliners.adoptaPerrito.entities.VacunaEntity(nombre = nombre.trim()))
+            animalVacunaRepository.save(com.kotliners.adoptaPerrito.entities.AnimalVacunaEntity(animalId = uuid, vacunaId = vacuna.id!!))
+        }
+        logger.info("Vacunas actualizadas para animal $animalId: $nombres")
+    }
+
+    /**
+     * Actualiza los padecimientos de un animal reemplazando la lista completa.
+     * Crea padecimientos nuevos si no existen en el catalogo.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    fun updatePadecimientos(animalId: String, nombres: List<String>, usuarioId: String, usuarioRol: com.kotliners.adoptaPerrito.domain.Rol) {
+        val uuid = try { UUID.fromString(animalId) } catch (e: IllegalArgumentException) { throw IllegalArgumentException("Animal no encontrado") }
+        val animal = animalRepository.findById(uuid).orElse(null) ?: throw IllegalArgumentException("Animal no encontrado")
+        if (usuarioRol != com.kotliners.adoptaPerrito.domain.Rol.CUIDADOR || animal.usuarioId.toString() != usuarioId) {
+            throw IllegalArgumentException("No autorizado para modificar este animal")
+        }
+        animalPadecimientoRepository.deleteByAnimalId(uuid)
+        nombres.filter { it.isNotBlank() }.forEach { nombre ->
+            val padecimiento = padecimientoRepository.findByNombre(nombre.trim())
+                ?: padecimientoRepository.save(com.kotliners.adoptaPerrito.entities.PadecimientoEntity(nombre = nombre.trim()))
+            animalPadecimientoRepository.save(com.kotliners.adoptaPerrito.entities.AnimalPadecimientoEntity(animalId = uuid, padecimientoId = padecimiento.id!!))
+        }
+        logger.info("Padecimientos actualizados para animal $animalId: $nombres")
     }
 
     /**

@@ -4,20 +4,20 @@ import com.kotliners.adoptaPerrito.domain.Estatus
 import com.kotliners.adoptaPerrito.domain.Sexo
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 import java.time.LocalDate
 
 /**
- * DTO para actualizar un animal. Todos los campos son requeridos
- * para simplificar la actualización parcial en el controller/service.
+ * DTO para actualizar un animal.
  */
 data class UpdateAnimalRequest(
 
-    /* Nombre del animal */
     @field:NotBlank(message = "Por favor, ingresa el nombre del animal.")
     val nombre: String,
 
-    /* Especie del animal */
+    /** Solo se aceptan "Perro" o "Gato" */
     @field:NotBlank(message = "Por favor, ingresa la especie del animal.")
+    @field:Pattern(regexp = "(?i)perro|gato", message = "La especie debe ser Perro o Gato.")
     val especie: String,
 
     /* Raza del animal */

@@ -16,7 +16,10 @@ class AnimalResponse(
     val estatus: String,
     val esterilizado: Boolean,
     val usuarioId: String,
-    val fechaRegistro: LocalDateTime
+    val fechaRegistro: LocalDateTime,
+    val fotoPortada: String? = null,
+    /** Numero de adoptantes que han manifestado interes en este animal. */
+    val numInteresados: Int = 0
 )
 
 /** DTO de respuesta detallado — incluye fotos, vacunas y padecimientos. */
@@ -32,18 +35,17 @@ class AnimalDetalleResponse(
     val esterilizado: Boolean,
     val usuarioId: String,
     val fechaRegistro: LocalDateTime,
-    /** URLs de las fotos del animal. */
     val fotos: List<String>,
-    /** Nombres de las vacunas aplicadas. */
     val vacunas: List<String>,
-    /** Nombres de los padecimientos o condiciones medicas. */
-    val padecimientos: List<String>
+    val padecimientos: List<String>,
+    val numInteresados: Int = 0
 )
 
 /**
  * Convierte un Animal de dominio a AnimalResponse (listado).
+ * Acepta opcionalmente la primera foto para mostrar en tarjetas.
  */
-fun Animal.toAnimalResponse() = AnimalResponse(
+fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0) = AnimalResponse(
     id = this.id ?: "",
     nombre = this.nombre,
     especie = this.especie,
@@ -54,7 +56,9 @@ fun Animal.toAnimalResponse() = AnimalResponse(
     estatus = this.estatus.name,
     esterilizado = this.esterilizado,
     usuarioId = this.usuarioId,
-    fechaRegistro = this.fechaRegistro
+    fechaRegistro = this.fechaRegistro,
+    fotoPortada = fotoPortada,
+    numInteresados = numInteresados
 )
 
 /**
@@ -63,7 +67,8 @@ fun Animal.toAnimalResponse() = AnimalResponse(
 fun Animal.toAnimalDetalleResponse(
     fotos: List<String>,
     vacunas: List<String>,
-    padecimientos: List<String>
+    padecimientos: List<String>,
+    numInteresados: Int = 0
 ) = AnimalDetalleResponse(
     id = this.id ?: "",
     nombre = this.nombre,
@@ -78,5 +83,6 @@ fun Animal.toAnimalDetalleResponse(
     fechaRegistro = this.fechaRegistro,
     fotos = fotos,
     vacunas = vacunas,
-    padecimientos = padecimientos
+    padecimientos = padecimientos,
+    numInteresados = numInteresados
 )

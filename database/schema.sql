@@ -174,3 +174,42 @@ CREATE TRIGGER trg_validar_rol_cuidador
 BEFORE INSERT ON animal
 FOR EACH ROW
 EXECUTE FUNCTION validar_rol_cuidador();
+
+-- =========================
+-- SEED: Vacunas comunes
+-- =========================
+INSERT INTO vacuna (nombre) VALUES
+  ('Rabia'),
+  ('Moquillo'),
+  ('Parvovirus'),
+  ('Hepatitis infecciosa canina'),
+  ('Leptospirosis'),
+  ('Bordetella (tos de las perreras)'),
+  ('Parainfluenza'),
+  ('Leucemia felina'),
+  ('Calicivirus felino'),
+  ('Rinotraqueitis viral felina'),
+  ('Panleucopenia felina'),
+  ('Clamidiosis felina')
+ON CONFLICT (nombre) DO NOTHING;
+
+-- =========================
+-- SEED: Padecimientos comunes
+-- =========================
+INSERT INTO padecimiento (nombre) VALUES
+  ('Diabetes'),
+  ('Artritis'),
+  ('Epilepsia'),
+  ('Enfermedad renal cronica'),
+  ('Hipotiroidismo'),
+  ('Hipertiroidismo'),
+  ('Displasia de cadera'),
+  ('Alergia alimentaria'),
+  ('Alergia ambiental'),
+  ('Enfermedad cardiaca'),
+  ('Cataratas'),
+  ('Leishmaniasis'),
+  ('Hernia discal'),
+  ('Obesidad'),
+  ('Anemia')
+ON CONFLICT (nombre) DO NOTHING;
