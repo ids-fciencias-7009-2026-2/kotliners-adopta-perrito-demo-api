@@ -35,7 +35,11 @@ data class AnimalEntity(
 	@Column(name = "especie", nullable = false, length = 50)
 	var especie: String = "",
 
-	/** Raza del animal */
+	/** Raza del animal (FK opcional a tabla raza) */
+	@Column(name = "raza_id")
+	var razaId: UUID? = null,
+
+	/** Nombre de raza como texto libre (legacy — se mantiene para compatibilidad) */
 	@Column(name = "raza", length = 50)
 	var raza: String? = null,
 

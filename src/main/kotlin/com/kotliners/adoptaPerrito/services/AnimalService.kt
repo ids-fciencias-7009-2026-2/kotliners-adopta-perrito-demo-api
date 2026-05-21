@@ -223,6 +223,7 @@ class AnimalService {
         entity.nombre = updates.nombre
         entity.especie = updates.especie
         entity.raza = updates.raza
+        entity.razaId = updates.razaId?.let { java.util.UUID.fromString(it) }
         entity.fechaNacimiento = updates.fechaNacimiento
         entity.sexo = updates.sexo
         entity.descripcion = updates.descripcion

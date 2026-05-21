@@ -11,6 +11,7 @@ fun AnimalEntity.toAnimal(): Animal {
 		nombre = this.nombre,
 		especie = this.especie,
 		raza = this.raza,
+		razaId = this.razaId?.toString(),
 		fechaNacimiento = this.fechaNacimiento,
 		sexo = this.sexo,
 		descripcion = this.descripcion,

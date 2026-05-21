@@ -89,6 +89,7 @@ class AnimalController {
             nombre = createRequest.nombre,
             especie = createRequest.especie,
             raza = createRequest.raza,
+            razaId = createRequest.razaId,
             fechaNacimiento = createRequest.fechaNacimiento,
             sexo = createRequest.sexo,
             descripcion = createRequest.descripcion,

@@ -10,6 +10,7 @@ class AnimalResponse(
     val nombre: String,
     val especie: String,
     val raza: String?,
+    val razaId: String?,
     val fechaNacimiento: LocalDate,
     val sexo: String,
     val descripcion: String,
@@ -18,7 +19,6 @@ class AnimalResponse(
     val usuarioId: String,
     val fechaRegistro: LocalDateTime,
     val fotoPortada: String? = null,
-    /** Numero de adoptantes que han manifestado interes en este animal. */
     val numInteresados: Int = 0
 )
 
@@ -28,6 +28,7 @@ class AnimalDetalleResponse(
     val nombre: String,
     val especie: String,
     val raza: String?,
+    val razaId: String?,
     val fechaNacimiento: LocalDate,
     val sexo: String,
     val descripcion: String,
@@ -50,6 +51,7 @@ fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0
     nombre = this.nombre,
     especie = this.especie,
     raza = this.raza,
+    razaId = this.razaId,
     fechaNacimiento = this.fechaNacimiento,
     sexo = this.sexo.name,
     descripcion = this.descripcion,
@@ -61,9 +63,6 @@ fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0
     numInteresados = numInteresados
 )
 
-/**
- * Convierte un Animal de dominio a AnimalDetalleResponse con datos enriquecidos.
- */
 fun Animal.toAnimalDetalleResponse(
     fotos: List<String>,
     vacunas: List<String>,
@@ -74,6 +73,7 @@ fun Animal.toAnimalDetalleResponse(
     nombre = this.nombre,
     especie = this.especie,
     raza = this.raza,
+    razaId = this.razaId,
     fechaNacimiento = this.fechaNacimiento,
     sexo = this.sexo.name,
     descripcion = this.descripcion,

@@ -17,8 +17,11 @@ data class Animal(
 	/** Especie del animal */
 	var especie: String,
 
-	/** Raza del animal */
+	/** Raza del animal (texto libre, legacy) */
 	var raza: String? = null,
+
+	/** ID de la raza en el catalogo (FK a tabla raza) */
+	var razaId: String? = null,
 
 	/** Fecha de nacimiento del animal */
 	var fechaNacimiento: LocalDate,
