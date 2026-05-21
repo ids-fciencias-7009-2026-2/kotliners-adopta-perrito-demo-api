@@ -142,12 +142,21 @@ class AnimalController {
     /**
      * - URL: GET /api/animales
      * - Header: Authorization: Bearer <token>
+     * - Query params opcionales (solo para ADOPTANTE):
+     *   especie, sexo, esterilizado, codigoPostal, vacuna, sinPadecimientos, ordenar
       * 
-      * @return ResponseEntity con el resultado de la operación
+      * @return ResponseEntity con el resultado de la operacion
      */
     @GetMapping
     fun listAnimals(
-            @RequestHeader("Authorization", required = true) token: String?
+            @RequestHeader("Authorization", required = true) token: String?,
+            @RequestParam(required = false) especie: String?,
+            @RequestParam(required = false) sexo: String?,
+            @RequestParam(required = false) esterilizado: Boolean?,
+            @RequestParam(required = false) codigoPostal: String?,
+            @RequestParam(required = false) vacuna: String?,
+            @RequestParam(defaultValue = "false") sinPadecimientos: Boolean,
+            @RequestParam(required = false) ordenar: String?
     ): ResponseEntity<Any> {
         logger.info("Solicitud para listar animales")
         if (token == null) {
@@ -159,7 +168,7 @@ class AnimalController {
 
         val rol = userFound.rol
 
-        try{
+        try {
             if (rol == Rol.CUIDADOR) {
                 logger.info("Usuario con rol CUIDADOR listando sus animales")
                 val animals = animalService.listAnimalsByOwner(userFound.id!!, rol)
@@ -169,8 +178,27 @@ class AnimalController {
                     animal.toAnimalResponse(foto, interesados)
                 })
             } else {
-                logger.info("Usuario con rol $rol listando todos los animales disponibles")
-                val animals = animalService.searchAllAnimals(rol)
+                // ADOPTANTE: aplica filtros si se proporcionaron
+                val hayFiltros = especie != null || sexo != null || esterilizado != null ||
+                    codigoPostal != null || vacuna != null || sinPadecimientos || ordenar != null
+
+                val animals = if (hayFiltros) {
+                    logger.info("ADOPTANTE usando filtros avanzados")
+                    animalService.buscarAnimalesConFiltros(
+                        requesterRole = rol,
+                        especie = especie,
+                        sexo = sexo,
+                        esterilizado = esterilizado,
+                        codigoPostal = codigoPostal,
+                        vacuna = vacuna,
+                        sinPadecimientos = sinPadecimientos,
+                        ordenar = ordenar
+                    )
+                } else {
+                    logger.info("ADOPTANTE listando todos los animales disponibles")
+                    animalService.searchAllAnimals(rol)
+                }
+
                 return ResponseEntity.ok(animals.map { animal ->
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
                     animal.toAnimalResponse(foto)

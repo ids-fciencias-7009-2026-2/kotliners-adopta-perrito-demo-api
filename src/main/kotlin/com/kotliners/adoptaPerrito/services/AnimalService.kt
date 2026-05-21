@@ -4,6 +4,7 @@ import com.kotliners.adoptaPerrito.domain.Animal
 import com.kotliners.adoptaPerrito.domain.toAnimal
 import com.kotliners.adoptaPerrito.domain.Estatus
 import com.kotliners.adoptaPerrito.domain.Rol
+import com.kotliners.adoptaPerrito.domain.Sexo
 
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.AnimalDetalleResponse
@@ -75,6 +76,60 @@ class AnimalService {
         val saved = animalRepository.save(entity)
         logger.info("Animal creado con ID: ${saved.id}")
         return saved.toAnimal()
+    }
+
+    /** 
+     * Busca animales disponibles aplicando filtros y ordenamiento opcionales.
+     * Solo accesible para usuarios con rol ADOPTANTE.
+     *
+     * @param requesterRole Rol del usuario que hace la solicitud.
+     * @param especie       Filtra por especie (PERRO/GATO). Null = todos.
+     * @param sexo          Filtra por sexo (MACHO/HEMBRA). Null = todos.
+     * @param esterilizado  Filtra por esterilizacion. Null = todos.
+     * @param codigoPostal  Filtra por codigo postal del cuidador. Null = todos.
+     * @param vacuna        Filtra animales que tienen esta vacuna. Null = todos.
+     * @param sinPadecimientos Si true, solo animales sin padecimientos.
+     * @param ordenar       Campo por el que ordenar: "nombre", "fechaNacimiento", "fechaRegistro".
+     * @return Lista filtrada y ordenada de animales disponibles.
+     */
+    fun buscarAnimalesConFiltros(
+        requesterRole: Rol,
+        especie: String?,
+        sexo: String?,
+        esterilizado: Boolean?,
+        codigoPostal: String?,
+        vacuna: String?,
+        sinPadecimientos: Boolean,
+        ordenar: String?
+    ): List<Animal> {
+        logger.info("Buscando animales con filtros: especie=$especie, sexo=$sexo, esterilizado=$esterilizado, cp=$codigoPostal, vacuna=$vacuna, sinPadecimientos=$sinPadecimientos, ordenar=$ordenar")
+        if (requesterRole != Rol.ADOPTANTE) {
+            throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden buscar animales")
+        }
+
+        val sexoEnum = sexo?.uppercase()?.let {
+            try { Sexo.valueOf(it) } catch (e: IllegalArgumentException) { null }
+        }
+
+        var resultados = animalRepository.buscarConFiltros(
+            especie = especie?.uppercase(),
+            sexo = sexoEnum,
+            esterilizado = esterilizado,
+            codigoPostal = codigoPostal,
+            vacunaNombre = vacuna,
+            sinPadecimientos = sinPadecimientos
+        ).map { it.toAnimal() }
+
+        // Ordenamiento en memoria para evitar complejidad extra en JPQL
+        resultados = when (ordenar?.lowercase()) {
+            "nombre"          -> resultados.sortedBy { it.nombre.lowercase() }
+            "fechanacimiento" -> resultados.sortedBy { it.fechaNacimiento }
+            "fecharegistro"   -> resultados.sortedByDescending { it.fechaRegistro }
+            else              -> resultados.sortedByDescending { it.fechaRegistro } // mas reciente por defecto
+        }
+
+        logger.info("Filtros aplicados: ${resultados.size} animales encontrados")
+        return resultados
     }
 
     /** 
