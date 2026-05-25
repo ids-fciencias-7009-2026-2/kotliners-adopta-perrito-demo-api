@@ -8,11 +8,15 @@ import com.kotliners.adoptaPerrito.domain.Sexo
 import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+
 import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
 import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
 import com.kotliners.adoptaPerrito.dto.response.VacunaResponse
 import com.kotliners.adoptaPerrito.dto.response.PadecimientoResponse
+
 import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
+
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
@@ -339,6 +343,31 @@ class AnimalController {
         return try {
             animalService.updatePadecimientos(id, nombres, userFound.id!!, userFound.rol)
             ResponseEntity.ok("Padecimientos actualizados")
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+        }
+    }
+    /**
+     * Retorna el historial de animales adoptados del cuidador autenticado.
+     *
+     * URL:    GET http://localhost:8080/api/animales/historial-adoptados
+     * Headers: Authorization: Bearer <token>
+     */
+    @GetMapping("/historial-adoptados")
+    fun historialAdoptados(
+        @RequestHeader("Authorization", required = true) token: String?
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+            ?: return ResponseEntity.status(401).body("Token invalido")
+
+        return try {
+            val historial = animalService.historialAdoptados(
+                cuidadorId = userFound.id ?: return ResponseEntity.status(401).body("Token invalido"),
+                rol = userFound.rol
+            )
+            ResponseEntity.ok(historial)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
