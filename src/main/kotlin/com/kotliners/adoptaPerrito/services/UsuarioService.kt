@@ -92,7 +92,7 @@ class UsuarioService {
             || usuarioRepository.findByUsername(usuarioEntity.username) != null
             || usuarioRepository.findByCurp(usuarioEntity.curp) != null) {
             logger.warn("Intento de registro con datos duplicados")
-            throw IllegalArgumentException("Datos ya registrados.")
+            throw IllegalArgumentException("Algunos datos ya estan registrados. Verifica tu correo, usuario y CURP.")
         }
     }
 
