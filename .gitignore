@@ -41,4 +41,5 @@ replay_pid*.log
 *.tmp
 *.temp
 ##
-src/test/*
+src/test/*.postman/
+postman/globals/
