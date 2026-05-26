@@ -38,6 +38,7 @@ fun UsuarioEntity.toUsuario(): Usuario {
         email = this.email,
         codigoPostal = this.codigoPostal,
         password = this.password,
-        token = this.token
+        token = this.token,
+        twoFactorEnabled = this.twoFactorEnabled
     )
 }

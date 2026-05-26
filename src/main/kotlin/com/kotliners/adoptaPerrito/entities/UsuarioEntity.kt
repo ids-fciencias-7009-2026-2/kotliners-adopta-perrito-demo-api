@@ -70,6 +70,46 @@ data class UsuarioEntity(
     @Column(name = "token")
     var token: String? = null,
 
+    /** Indica si el correo del usuario ya fue verificado */
+    @Column(name = "email_verificado", nullable = false)
+    var emailVerificado: Boolean = false,
+
+    /** Token temporal para verificacion de correo */
+    @Column(name = "email_verificacion_token")
+    var emailVerificacionToken: String? = null,
+
+    /** Fecha de expiracion del token de verificacion de correo */
+    @Column(name = "email_verificacion_expira")
+    var emailVerificacionExpira: LocalDateTime? = null,
+
+    /** Token temporal para recuperar contrasena */
+    @Column(name = "password_reset_token")
+    var passwordResetToken: String? = null,
+
+    /** Fecha de expiracion del token de recuperacion de contrasena */
+    @Column(name = "password_reset_expira")
+    var passwordResetExpira: LocalDateTime? = null,
+
+    /** Indica si el usuario tiene segundo factor habilitado */
+    @Column(name = "two_factor_enabled", nullable = false)
+    var twoFactorEnabled: Boolean = false,
+
+    /** Codigo temporal de segundo factor */
+    @Column(name = "two_factor_code")
+    var twoFactorCode: String? = null,
+
+    /** Fecha de expiracion del codigo de segundo factor */
+    @Column(name = "two_factor_expira")
+    var twoFactorExpira: LocalDateTime? = null,
+
+    /** Numero consecutivo de intentos fallidos de login */
+    @Column(name = "intentos_fallidos", nullable = false)
+    var intentosFallidos: Int = 0,
+
+    /** Fecha hasta la que el usuario esta bloqueado por intentos fallidos */
+    @Column(name = "bloqueado_hasta")
+    var bloqueadoHasta: LocalDateTime? = null,
+
     /** Fecha de última actualización del perfil */
     @Column(name = "fecha_update")
     var fechaUpdate: LocalDateTime? = null,

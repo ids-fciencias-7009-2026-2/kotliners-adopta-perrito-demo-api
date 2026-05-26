@@ -42,6 +42,16 @@ CREATE TABLE usuario (
     apellido_materno VARCHAR(100)  NOT NULL,
     password         VARCHAR(255)  NOT NULL,
     token            TEXT,
+    email_verificado BOOLEAN       NOT NULL DEFAULT FALSE,
+    email_verificacion_token TEXT,
+    email_verificacion_expira TIMESTAMP,
+    password_reset_token TEXT,
+    password_reset_expira TIMESTAMP,
+    two_factor_enabled BOOLEAN     NOT NULL DEFAULT FALSE,
+    two_factor_code VARCHAR(6),
+    two_factor_expira TIMESTAMP,
+    intentos_fallidos INTEGER      NOT NULL DEFAULT 0,
+    bloqueado_hasta TIMESTAMP,
     codigo_postal    VARCHAR(5)    NOT NULL,
     rol              rol_enum      NOT NULL,
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
@@ -148,68 +158,3 @@ CREATE TABLE usuario_interes (
 );
 
 CREATE INDEX idx_usuario_interes_usuario_id ON usuario_interes(usuario_id);
-
--- =========================
--- TRIGGER: Solo cuidadores pueden publicar animales
--- =========================
-
-CREATE OR REPLACE FUNCTION validar_rol_cuidador()
-RETURNS TRIGGER AS $$
-DECLARE
-    rol_usuario rol_enum;
-BEGIN
-    SELECT rol INTO rol_usuario FROM usuario WHERE usuario_id = NEW.usuario_id;
-
-    IF rol_usuario != 'CUIDADOR' THEN
-        RAISE EXCEPTION 'Solo los usuarios con rol CUIDADOR pueden publicar animales.';
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_validar_rol_cuidador ON animal;
-
-CREATE TRIGGER trg_validar_rol_cuidador
-BEFORE INSERT ON animal
-FOR EACH ROW
-EXECUTE FUNCTION validar_rol_cuidador();
-
--- =========================
--- SEED: Vacunas comunes
--- =========================
-INSERT INTO vacuna (nombre) VALUES
-  ('Rabia'),
-  ('Moquillo'),
-  ('Parvovirus'),
-  ('Hepatitis infecciosa canina'),
-  ('Leptospirosis'),
-  ('Bordetella (tos de las perreras)'),
-  ('Parainfluenza'),
-  ('Leucemia felina'),
-  ('Calicivirus felino'),
-  ('Rinotraqueitis viral felina'),
-  ('Panleucopenia felina'),
-  ('Clamidiosis felina')
-ON CONFLICT (nombre) DO NOTHING;
-
--- =========================
--- SEED: Padecimientos comunes
--- =========================
-INSERT INTO padecimiento (nombre) VALUES
-  ('Diabetes'),
-  ('Artritis'),
-  ('Epilepsia'),
-  ('Enfermedad renal cronica'),
-  ('Hipotiroidismo'),
-  ('Hipertiroidismo'),
-  ('Displasia de cadera'),
-  ('Alergia alimentaria'),
-  ('Alergia ambiental'),
-  ('Enfermedad cardiaca'),
-  ('Cataratas'),
-  ('Leishmaniasis'),
-  ('Hernia discal'),
-  ('Obesidad'),
-  ('Anemia')
-ON CONFLICT (nombre) DO NOTHING;

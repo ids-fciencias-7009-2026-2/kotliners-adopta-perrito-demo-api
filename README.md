@@ -1,75 +1,90 @@
-# Colitas Felices — Backend API
+# Colitas Felices - Backend
+Kotliners
 
-API REST para la plataforma de adopcion de mascotas. Construida con Spring Boot 4, Kotlin y PostgreSQL.
+## Estructura del repositorio
+```
+/src
+/postman
+/database
+    schema.sql
+/README.md
+```
 
-## Requisitos
+## Pasos para el levantamiento del proyecto
 
-- Java 21+
-- Maven (incluido via `./mvnw`)
-- PostgreSQL 14+
+### 1. Verificar que PostgreSQL esté activo
+Asegúrate de tener PostgreSQL corriendo en tu máquina.
 
-## Variables de entorno
+### 2. Construir la base de datos con schema.sql
+Ejecuta el script principal para crear todas las tablas desde cero:
+```sh
+psql -U postgres -f database/schema.sql
+```
+Este archivo contiene toda la estructura de la base de datos y puede ejecutarse en cualquier computadora.
 
-Crea un archivo `.env` en la raiz del proyecto (ya existe `.env.example`):
-
-```env
-# Base de datos
+### 3. Configurar variables de entorno
+Copia el archivo de ejemplo y completa tus datos:
+```sh
+cp .env.example .env
+```
+Edita `.env` con tus credenciales:
+```
 URL_DB=localhost:5432/colitas_db
-USER_DB=tu_usuario
+USER_DB=postgres
 PASSWORD_DB=tu_password
-
-# Correo Gmail SMTP
-GMAIL_USERNAME=tu_correo@gmail.com
-GMAIL_APP_PASSWORD=tu_app_password
-MAIL_FROM=tu_correo@gmail.com
-
-# Cloudinary (para subida de imagenes)
-CLOUDINARY_CLOUD_NAME=tu_cloud_name
-CLOUDINARY_API_KEY=tu_api_key
-CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
-### Configurar Gmail App Password
-
-1. Activa verificacion en 2 pasos en tu cuenta Google
-2. Ve a [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-3. Genera una contrasena de aplicacion para "Mail"
-4. Usa esa contrasena en `GMAIL_APP_PASSWORD`
-
-## Base de datos
-
-```bash
-# Crear la base de datos
-psql -U tu_usuario -c "CREATE DATABASE colitas_db;"
-
-# Aplicar el schema
-psql -U tu_usuario -d colitas_db -f database/schema.sql
-```
-
-## Ejecucion
-
-```bash
+### 4. Levantar el proyecto
+```sh
 ./mvnw spring-boot:run
 ```
+Verifica que aparezca `Started AdoptaPerritoApplicationKt` en la consola.
 
-La API estara disponible en `http://localhost:8080`.
+## Iteracion 3 - Ver detalle de animal
 
-## Endpoints principales
+### Backend
 
-| Metodo | URL | Descripcion |
-|--------|-----|-------------|
-| POST | `/usuarios/register` | Registro de usuario |
-| POST | `/usuarios/login` | Login |
-| POST | `/usuarios/logout` | Logout |
-| GET | `/usuarios/me` | Perfil del usuario autenticado |
-| PUT | `/usuarios` | Actualizar perfil |
-| GET | `/api/animales` | Listar animales disponibles |
-| GET | `/api/animales/me` | Animales del cuidador autenticado |
-| GET | `/api/animales/{id}` | Detalle de un animal |
-| POST | `/api/animales` | Publicar animal (cuidador) |
-| DELETE | `/api/animales` | Eliminar animal (cuidador) |
-| POST | `/api/animales/{id}/interes` | Manifestar interes (adoptante) |
-| DELETE | `/api/animales/{id}/interes` | Quitar interes (adoptante) |
-| GET | `/api/usuarios/me/intereses` | Favoritos del adoptante |
-| GET | `/api/animales/me/intereses` | Intereses recibidos (cuidador) |
-| POST | `/uploads/foto-perfil` | Subir foto de perfil a Cloudinary |
+Endpoint autenticado:
+```http
+GET /animals/{id}
+Authorization: Bearer <token>
+```
+
+Tambien se mantiene la ruta compatible:
+```http
+GET /api/animales/{id}
+Authorization: Bearer <token>
+```
+
+La respuesta incluye los datos del animal y banderas para saber si el usuario autenticado es dueno de la publicacion:
+`esDueno`, `puedeEditar` y `puedeEliminar`.
+
+### Frontend
+
+Vista estatica servida por Spring:
+```text
+http://localhost:8080/animal-detail.html?id={animalId}
+```
+
+La vista consume la API real con token desde `localStorage` o `sessionStorage`; no usa datos simulados.
+
+### Documento
+
+El caso de uso esta documentado en:
+```text
+docs/CU-VerDetalleAnimal.md
+```
+
+La evolucion de la Iteracion 3 para Persona 2 esta integrada en:
+```text
+docs/Iteracion3.md
+```
+
+## Flujos de seguridad de usuarios
+
+Los flujos de verificacion de correo, recuperacion de contrasena, 2FA y bloqueo
+por intentos fallidos estan documentados en:
+
+```text
+docs/FlujosSeguridadUsuarios.md
+```

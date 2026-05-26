@@ -2,11 +2,11 @@ package com.kotliners.adoptaPerrito.services
 
 import com.kotliners.adoptaPerrito.domain.Usuario
 import com.kotliners.adoptaPerrito.domain.toUsuario
+import com.kotliners.adoptaPerrito.adapters.MailAdapter
 import com.kotliners.adoptaPerrito.entities.UsuarioEntity
 import com.kotliners.adoptaPerrito.repositories.UsuarioRepository
 import com.kotliners.adoptaPerrito.repositories.CodigoPostalRepository
 import com.kotliners.adoptaPerrito.repositories.toUsuarioEntity
-import com.kotliners.adoptaPerrito.utils.PasswordUtil
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+import java.security.MessageDigest
+import java.security.SecureRandom
 import java.util.UUID
 import java.time.LocalDateTime
 
@@ -34,6 +36,24 @@ class UsuarioService {
     /** Repositorio de codigos postales. */
     @Autowired
     lateinit var codigoPostalRepository: CodigoPostalRepository
+
+    @Autowired
+    lateinit var mailAdapter: MailAdapter
+
+    private val secureRandom = SecureRandom()
+    private val maxIntentosFallidos = 3
+    private val minutosBloqueo = 15L
+    private val minutosCodigo2FA = 10L
+    private val minutosResetPassword = 30L
+    private val horasVerificacionEmail = 24L
+
+    sealed class LoginResult {
+        data class Success(val usuario: Usuario) : LoginResult()
+        object InvalidCredentials : LoginResult()
+        data class Locked(val lockedUntil: LocalDateTime) : LoginResult()
+        object EmailNotVerified : LoginResult()
+        object TwoFactorRequired : LoginResult()
+    }
 
     /**
      * Valida que el codigo postal tenga exactamente 5 digitos numericos.
@@ -80,6 +100,77 @@ class UsuarioService {
         }
     }
 
+    private fun hashPassword(password: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun generateSixDigitCode(): String {
+        return secureRandom.nextInt(1_000_000).toString().padStart(6, '0')
+    }
+
+    private fun sendEmail(to: String, subject: String, html: String) {
+        if (::mailAdapter.isInitialized) {
+            mailAdapter.sendHtmlEmail(to = to, subject = subject, htmlBody = html)
+        } else {
+            logger.warn("MailAdapter no inicializado; correo omitido para $to")
+        }
+    }
+
+    private fun sendVerificationEmail(usuario: UsuarioEntity) {
+        val token = usuario.emailVerificacionToken ?: return
+        sendEmail(
+            usuario.email,
+            "Verifica tu correo - Colitas Felices",
+            """
+                <h2>Verifica tu correo</h2>
+                <p>Hola ${usuario.nombres}, usa este token para activar tu cuenta:</p>
+                <p><strong>$token</strong></p>
+                <p>Expira en $horasVerificacionEmail horas.</p>
+            """.trimIndent()
+        )
+    }
+
+    private fun sendPasswordResetEmail(usuario: UsuarioEntity) {
+        val token = usuario.passwordResetToken ?: return
+        sendEmail(
+            usuario.email,
+            "Recuperacion de contrasena - Colitas Felices",
+            """
+                <h2>Recuperacion de contrasena</h2>
+                <p>Usa este token para definir una nueva contrasena:</p>
+                <p><strong>$token</strong></p>
+                <p>Expira en $minutosResetPassword minutos.</p>
+            """.trimIndent()
+        )
+    }
+
+    private fun sendTwoFactorEmail(usuario: UsuarioEntity) {
+        val code = usuario.twoFactorCode ?: return
+        sendEmail(
+            usuario.email,
+            "Codigo de seguridad 2FA - Colitas Felices",
+            """
+                <h2>Codigo de seguridad</h2>
+                <p>Tu codigo de acceso es:</p>
+                <p><strong>$code</strong></p>
+                <p>Expira en $minutosCodigo2FA minutos.</p>
+            """.trimIndent()
+        )
+    }
+
+    private fun sendAccountLockedEmail(usuario: UsuarioEntity) {
+        sendEmail(
+            usuario.email,
+            "Cuenta bloqueada temporalmente - Colitas Felices",
+            """
+                <h2>Cuenta bloqueada temporalmente</h2>
+                <p>Detectamos varios intentos fallidos de inicio de sesion.</p>
+                <p>Tu cuenta estara bloqueada hasta ${usuario.bloqueadoHasta}.</p>
+            """.trimIndent()
+        )
+    }
+
     /**
      * Valida que el email, username y CURP del usuario no esten ya registrados.
      *
@@ -110,7 +201,11 @@ class UsuarioService {
         validateUsuario(usuarioEntity)
         validateCodigoPostal(usuarioEntity.codigoPostal)
         ensureCodigoPostalExists(usuarioEntity.codigoPostal)
+        usuarioEntity.emailVerificado = false
+        usuarioEntity.emailVerificacionToken = tokenGenerator()
+        usuarioEntity.emailVerificacionExpira = LocalDateTime.now().plusHours(horasVerificacionEmail)
         val savedEntity = usuarioRepository.save(usuarioEntity)
+        sendVerificationEmail(savedEntity)
         logger.info("Usuario guardado con ID: ${savedEntity.id}")
         val usuarioGuardado = savedEntity.toUsuario()
         usuarioGuardado.password = "****"
@@ -118,30 +213,81 @@ class UsuarioService {
     }
 
     /**
-     * Autentica a un usuario con email y contrasena en texto plano.
-     * Busca por email y verifica la contrasena con BCrypt.
+     * Recupera todos los usuarios registrados en el sistema.
+     *
+     * @return Lista de todos los usuarios.
+     */
+    fun searchAllUsuarios(): List<Usuario> {
+        logger.info("Buscando todos los usuarios")
+        val usuarioEntities = usuarioRepository.findAll()
+        logger.info("Usuarios encontrados: ${usuarioEntities.count()}")
+        return usuarioEntities.map { it.toUsuario() }
+    }
+
+    /**
+     * Autentica a un usuario con email y contrasena hasheada.
      * Si las credenciales son correctas, genera y persiste un nuevo token de sesion.
      *
      * @param email Correo electronico del usuario.
-     * @param password Contrasena en texto plano (se verifica contra el hash BCrypt almacenado).
+     * @param password Contrasena hasheada con SHA-256.
      * @return El usuario autenticado con su token, o null si las credenciales son incorrectas.
      */
     fun login(email: String, password: String): Usuario? {
+        return when (val result = authenticate(email, password)) {
+            is LoginResult.Success -> result.usuario
+            else -> null
+        }
+    }
+
+    fun authenticate(email: String, password: String): LoginResult {
         logger.info("Intento de login para: $email")
-        val usuarioEntity = usuarioRepository.findByEmail(email)
-        if (usuarioEntity == null) {
-            logger.warn("Login fallido: email no encontrado: $email")
-            return null
+        val usuarioEntity = usuarioRepository.findByEmail(email) ?: return LoginResult.InvalidCredentials
+        val now = LocalDateTime.now()
+        val bloqueadoHasta = usuarioEntity.bloqueadoHasta
+        if (bloqueadoHasta != null && bloqueadoHasta.isAfter(now)) {
+            return LoginResult.Locked(bloqueadoHasta)
         }
-        if (!PasswordUtil.matches(password, usuarioEntity.password)) {
-            logger.warn("Login fallido: contrasena incorrecta para: $email")
-            return null
+        if (bloqueadoHasta != null && !bloqueadoHasta.isAfter(now)) {
+            usuarioEntity.intentosFallidos = 0
+            usuarioEntity.bloqueadoHasta = null
         }
-        val token = tokenGenerator()
-        usuarioEntity.token = token
+
+        if (usuarioEntity.password != password) {
+            usuarioEntity.intentosFallidos += 1
+            if (usuarioEntity.intentosFallidos >= maxIntentosFallidos) {
+                usuarioEntity.bloqueadoHasta = now.plusMinutes(minutosBloqueo)
+                usuarioEntity.token = null
+                val saved = usuarioRepository.save(usuarioEntity)
+                sendAccountLockedEmail(saved)
+                return LoginResult.Locked(saved.bloqueadoHasta!!)
+            }
+            usuarioRepository.save(usuarioEntity)
+            return LoginResult.InvalidCredentials
+        }
+
+        usuarioEntity.intentosFallidos = 0
+        usuarioEntity.bloqueadoHasta = null
+        if (!usuarioEntity.emailVerificado) {
+            usuarioEntity.emailVerificacionToken = tokenGenerator()
+            usuarioEntity.emailVerificacionExpira = now.plusHours(horasVerificacionEmail)
+            val saved = usuarioRepository.save(usuarioEntity)
+            sendVerificationEmail(saved)
+            return LoginResult.EmailNotVerified
+        }
+
+        if (usuarioEntity.twoFactorEnabled) {
+            usuarioEntity.twoFactorCode = generateSixDigitCode()
+            usuarioEntity.twoFactorExpira = now.plusMinutes(minutosCodigo2FA)
+            usuarioEntity.token = null
+            val saved = usuarioRepository.save(usuarioEntity)
+            sendTwoFactorEmail(saved)
+            return LoginResult.TwoFactorRequired
+        }
+
+        usuarioEntity.token = tokenGenerator()
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Login exitoso para: ${savedEntity.email}")
-        return savedEntity.toUsuario()
+        return LoginResult.Success(savedEntity.toUsuario())
     }
 
     /**
@@ -180,6 +326,65 @@ class UsuarioService {
         }
         usuarioRepository.updateTokenById(UUID.fromString(userId), null)
         logger.info("Token invalidado para usuario ID: $userId")
+    }
+
+    fun verifyEmail(token: String): Boolean {
+        val usuario = usuarioRepository.findByEmailVerificacionToken(token) ?: return false
+        val expira = usuario.emailVerificacionExpira
+        if (expira == null || expira.isBefore(LocalDateTime.now())) return false
+        usuario.emailVerificado = true
+        usuario.emailVerificacionToken = null
+        usuario.emailVerificacionExpira = null
+        usuarioRepository.save(usuario)
+        return true
+    }
+
+    fun requestPasswordReset(email: String) {
+        val usuario = usuarioRepository.findByEmail(email) ?: return
+        usuario.passwordResetToken = tokenGenerator()
+        usuario.passwordResetExpira = LocalDateTime.now().plusMinutes(minutosResetPassword)
+        val saved = usuarioRepository.save(usuario)
+        sendPasswordResetEmail(saved)
+    }
+
+    fun resetPassword(token: String, newPassword: String): Boolean {
+        val usuario = usuarioRepository.findByPasswordResetToken(token) ?: return false
+        val expira = usuario.passwordResetExpira
+        if (expira == null || expira.isBefore(LocalDateTime.now())) return false
+        usuario.password = hashPassword(newPassword)
+        usuario.passwordResetToken = null
+        usuario.passwordResetExpira = null
+        usuario.intentosFallidos = 0
+        usuario.bloqueadoHasta = null
+        usuario.token = null
+        usuario.fechaUpdate = LocalDateTime.now()
+        usuarioRepository.save(usuario)
+        return true
+    }
+
+    fun enableTwoFactor(token: String, enabled: Boolean): Boolean {
+        val usuario = usuarioRepository.findByToken(token) ?: return false
+        usuario.twoFactorEnabled = enabled
+        usuario.twoFactorCode = null
+        usuario.twoFactorExpira = null
+        usuario.fechaUpdate = LocalDateTime.now()
+        usuarioRepository.save(usuario)
+        return true
+    }
+
+    fun verifyTwoFactor(email: String, code: String): Usuario? {
+        val usuario = usuarioRepository.findByEmail(email) ?: return null
+        val expira = usuario.twoFactorExpira
+        if (usuario.twoFactorCode != code || expira == null || expira.isBefore(LocalDateTime.now())) {
+            return null
+        }
+        usuario.twoFactorCode = null
+        usuario.twoFactorExpira = null
+        usuario.intentosFallidos = 0
+        usuario.bloqueadoHasta = null
+        usuario.token = tokenGenerator()
+        val saved = usuarioRepository.save(usuario)
+        return saved.toUsuario()
     }
 
     /**

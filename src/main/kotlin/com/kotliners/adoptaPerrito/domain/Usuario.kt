@@ -39,5 +39,8 @@ data class Usuario(
     var password: String,
 
     /** Token de sesión activo */
-    var token: String? = null
+    var token: String? = null,
+
+    /** Indica si el usuario tiene segundo factor habilitado */
+    var twoFactorEnabled: Boolean = false
 )

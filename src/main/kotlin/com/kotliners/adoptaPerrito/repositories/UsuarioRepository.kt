@@ -80,6 +80,12 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
      */
     @Query("select u from UsuarioEntity u where u.email = :email and u.password = :password")
     fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?   
+
+    @Query("select u from UsuarioEntity u where u.emailVerificacionToken = :token")
+    fun findByEmailVerificacionToken(token: String): UsuarioEntity?
+
+    @Query("select u from UsuarioEntity u where u.passwordResetToken = :token")
+    fun findByPasswordResetToken(token: String): UsuarioEntity?
     
     /**
      * Actualiza el token de sesión de un usuario específico.
