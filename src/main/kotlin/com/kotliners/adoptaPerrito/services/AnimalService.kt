@@ -93,7 +93,7 @@ class AnimalService {
             throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden listar todos los animales")
         }
         return animalRepository.findAll()
-            .filter { it.estatus != com.kotliners.adoptaPerrito.domain.Estatus.ADOPTADO && !it.inapropiado }
+            .filter { it.estatus != com.kotliners.adoptaPerrito.domain.Estatus.ADOPTADO }
             .map { it.toAnimal() }
     }
 
@@ -344,6 +344,38 @@ class AnimalService {
     }
 
     /**
+     * Marca un animal como inapropiado para adopción. 
+     * @param id ID del animal a marcar.
+     * @param usuarioId ID del usuario que hace la solicitud.
+     * @param usuarioRol Rol del usuario que hace la solicitud (debe ser ADOPTANTE).
+     * @return true si el animal fue marcado como inapropiado, false si no se encontró el animal o el ID no es válido.
+     * @throws IllegalArgumentException si el usuario no tiene rol ADOPTANTE.
+     */
+    fun marcarAnimalInapropiado(
+        id: String, 
+        usuarioId: String, 
+        usuarioRol: Rol
+    ): Boolean {
+        logger.info("Marcando animal como inapropiado por ID: $id")
+        val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
+            logger.warn("ID de animal no es un UUID valido: $id")
+            return false
+        }
+        val entity = animalRepository.findById(uuid).orElse(null)
+        if (entity == null) {
+            logger.warn("No se encontró el animal con ID: $id")
+            return false
+        }
+        if (usuarioRol != Rol.ADOPTANTE) {
+            logger.warn("Usuario $usuarioId sin rol ADOPTANTE intentó marcar animal como inapropiado: $id")
+            throw IllegalArgumentException("Solo adoptantes pueden marcar animales como inapropiados")
+        }
+        entity.inapropiado = true
+        animalRepository.save(entity)
+        logger.info("Animal marcado como inapropiado con éxito: $id")
+        return true
+    }
+
      * Retorna el historial de animales adoptados de un cuidador.
      *
      * @param cuidadorId ID del cuidador autenticado.

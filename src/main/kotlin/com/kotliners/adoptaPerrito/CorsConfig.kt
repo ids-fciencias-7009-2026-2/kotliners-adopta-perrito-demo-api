@@ -25,7 +25,7 @@ class CorsConfig : WebMvcConfigurer {
         logger.info("CORS configurado para: $frontendUrl")
         registry.addMapping("/**")
             .allowedOrigins(frontendUrl)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
     }
 }
