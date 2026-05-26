@@ -520,6 +520,7 @@ class AnimalService {
         return true
     }
 
+    /**
      * Retorna el historial de animales adoptados de un cuidador.
      *
      * @param cuidadorId ID del cuidador autenticado.

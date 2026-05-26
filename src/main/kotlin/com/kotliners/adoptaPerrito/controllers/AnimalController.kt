@@ -21,7 +21,6 @@ import com.kotliners.adoptaPerrito.utils.TokenExtractor
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
 
-import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -417,7 +416,6 @@ class AnimalController {
             ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
     }
-}
 
     /**
      * Marca un animal como inapropiado para adopción.
