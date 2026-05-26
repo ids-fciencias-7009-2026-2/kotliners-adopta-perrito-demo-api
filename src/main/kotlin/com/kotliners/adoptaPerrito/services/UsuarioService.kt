@@ -54,14 +54,46 @@ class UsuarioService {
     }
 
     /**
-     * Retorna coordenadas geograficas mock para un codigo postal.
-     * TBD: reemplazar con una API de geocodificacion real.
+     * Obtiene coordenadas geograficas para un codigo postal usando la API de Nominatim (OpenStreetMap).
+     * Si la API no responde o no encuentra el CP, devuelve coordenadas del centro de CDMX como fallback.
      *
      * @param cp Codigo postal de 5 digitos.
-     * @return Par (latitud, longitud) con coordenadas del centro de CDMX.
+     * @return Par (latitud, longitud).
      */
     private fun translateCpToCoords(cp: String): Pair<java.math.BigDecimal, java.math.BigDecimal> {
-        return Pair(java.math.BigDecimal("19.432608"), java.math.BigDecimal("-99.133209"))
+        val fallback = Pair(java.math.BigDecimal("19.432608"), java.math.BigDecimal("-99.133209"))
+        return try {
+            val url = "https://nominatim.openstreetmap.org/search?postalcode=${cp}&country=Mexico&format=json&limit=1"
+            val restTemplate = org.springframework.web.client.RestTemplate().apply {
+                val factory = org.springframework.http.client.SimpleClientHttpRequestFactory()
+                factory.setConnectTimeout(4000)
+                factory.setReadTimeout(6000)
+                requestFactory = factory
+            }
+            val headers = org.springframework.http.HttpHeaders().apply {
+                set("User-Agent", "ColitasFelices/1.0 (contacto@colitas.mx)")
+            }
+            val entity = org.springframework.http.HttpEntity<Void>(headers)
+            @Suppress("UNCHECKED_CAST")
+            val response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, List::class.java)
+            val results = response.body as? List<Map<String, Any?>>
+            if (results.isNullOrEmpty()) {
+                logger.warn("Nominatim no encontro coordenadas para CP $cp, usando fallback")
+                return fallback
+            }
+            val lat = results[0]["lat"]?.toString()?.toBigDecimalOrNull()
+            val lon = results[0]["lon"]?.toString()?.toBigDecimalOrNull()
+            if (lat != null && lon != null) {
+                logger.info("Nominatim: CP $cp -> lat=$lat, lon=$lon")
+                Pair(lat, lon)
+            } else {
+                logger.warn("Nominatim devolvio datos invalidos para CP $cp, usando fallback")
+                fallback
+            }
+        } catch (e: Exception) {
+            logger.warn("Error consultando Nominatim para CP $cp: ${e.message}, usando fallback")
+            fallback
+        }
     }
 
     /**

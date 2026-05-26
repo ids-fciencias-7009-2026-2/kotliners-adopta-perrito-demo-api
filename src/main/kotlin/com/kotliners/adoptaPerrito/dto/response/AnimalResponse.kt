@@ -19,7 +19,9 @@ class AnimalResponse(
     val usuarioId: String,
     val fechaRegistro: LocalDateTime,
     val fotoPortada: String? = null,
-    val numInteresados: Int = 0
+    val numInteresados: Int = 0,
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )
 
 /** DTO de respuesta detallado — incluye fotos, vacunas y padecimientos. */
@@ -46,7 +48,7 @@ class AnimalDetalleResponse(
  * Convierte un Animal de dominio a AnimalResponse (listado).
  * Acepta opcionalmente la primera foto para mostrar en tarjetas.
  */
-fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0) = AnimalResponse(
+fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0, latitud: Double? = null, longitud: Double? = null) = AnimalResponse(
     id = this.id ?: "",
     nombre = this.nombre,
     especie = this.especie,
@@ -60,7 +62,9 @@ fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0
     usuarioId = this.usuarioId,
     fechaRegistro = this.fechaRegistro,
     fotoPortada = fotoPortada,
-    numInteresados = numInteresados
+    numInteresados = numInteresados,
+    latitud = latitud,
+    longitud = longitud
 )
 
 fun Animal.toAnimalDetalleResponse(

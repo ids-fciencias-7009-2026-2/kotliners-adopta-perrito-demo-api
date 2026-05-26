@@ -18,6 +18,7 @@ import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -185,7 +186,8 @@ class AnimalController {
                 return ResponseEntity.ok(animals.map { animal ->
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
                     val interesados = animalService.getNumInteresados(animal.id ?: "")
-                    animal.toAnimalResponse(foto, interesados)
+                    val coords = animalService.getCoordsForAnimal(animal)
+                    animal.toAnimalResponse(foto, interesados, coords?.first, coords?.second)
                 })
             } else {
                 // ADOPTANTE: aplica filtros si se proporcionaron
@@ -219,7 +221,8 @@ class AnimalController {
 
                 return ResponseEntity.ok(animals.map { animal ->
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
-                    animal.toAnimalResponse(foto)
+                    val coords = animalService.getCoordsForAnimal(animal)
+                    animal.toAnimalResponse(foto, 0, coords?.first, coords?.second)
                 })
             }
         } catch (e: IllegalArgumentException) {
