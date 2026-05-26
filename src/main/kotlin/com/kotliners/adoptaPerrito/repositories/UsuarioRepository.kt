@@ -108,3 +108,13 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
     @Query("update UsuarioEntity u set u.token = :token where u.id = :id")
     fun updateTokenById(id: UUID?, token: String?)
 }
+
+    /**
+     * Marca un usuario como eliminado (soft delete).
+     * Establece fecha_eliminado y limpia el token de sesion.
+     */
+    @Modifying
+    @Transactional
+    @Query("update UsuarioEntity u set u.fechaEliminado = :fecha, u.token = null where u.id = :id")
+    fun softDeleteById(id: UUID, fecha: java.time.LocalDateTime)
+}
