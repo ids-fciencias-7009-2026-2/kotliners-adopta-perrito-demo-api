@@ -8,6 +8,7 @@ import com.kotliners.adoptaPerrito.domain.Rol
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.AnimalDetalleResponse
 import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
+import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
 
 import com.kotliners.adoptaPerrito.entities.AnimalEntity
 
@@ -375,4 +376,29 @@ class AnimalService {
         return true
     }
 
+     * Retorna el historial de animales adoptados de un cuidador.
+     *
+     * @param cuidadorId ID del cuidador autenticado.
+     * @param rol Rol del usuario para verificar que sea CUIDADOR.
+     * @throws IllegalArgumentException si el usuario no es CUIDADOR.
+     */
+    fun historialAdoptados(
+        cuidadorId: String,
+        rol: Rol
+    ): List<com.kotliners.adoptaPerrito.dto.response.AnimalResponse> {
+        logger.info("Consultando historial adoptados del cuidador: $cuidadorId")
+        if (rol != Rol.CUIDADOR) {
+            throw IllegalArgumentException("Solo los cuidadores pueden consultar su historial de adoptados.")
+        }
+        val uuid = UUID.fromString(cuidadorId)
+        val adoptados = animalRepository.findAllByUsuarioIdAndEstatus(uuid, Estatus.ADOPTADO)
+        logger.info("Total adoptados encontrados: ${adoptados.size}")
+        return adoptados.map { entity ->
+            val animal = entity.toAnimal()
+            animal.toAnimalResponse(
+                fotoPortada = getPrimeraFoto(animal.id ?: ""),
+                numInteresados = getNumInteresados(animal.id ?: "")
+            )
+        }
+    }
 }
