@@ -35,6 +35,10 @@ class UsuarioService {
     @Autowired
     lateinit var codigoPostalRepository: CodigoPostalRepository
 
+    /** Repositorio de los correos */
+    @Autowired
+    lateinit var mailAdapter: com.kotliners.adoptaPerrito.adapters.MailAdapter
+
     /**
      * Valida que el codigo postal tenga exactamente 5 digitos numericos.
      * Protege la capa de servicio ante llamadas directas sin pasar por el DTO.
@@ -133,6 +137,11 @@ class UsuarioService {
             logger.warn("Login fallido: email no encontrado: $email")
             return null
         }
+        //Bloqueador de cuentas eliminadas
+        if (usuarioEntity.fechaEliminado != null) {
+            logger.warn("Login fallido: cuenta eliminada para: $email")
+            return null
+        }
         if (!PasswordUtil.matches(password, usuarioEntity.password)) {
             logger.warn("Login fallido: contrasena incorrecta para: $email")
             return null
@@ -141,6 +150,24 @@ class UsuarioService {
         usuarioEntity.token = token
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Login exitoso para: ${savedEntity.email}")
+        // Notificacion del ingreso exitoso
+        val cuerpoIngreso = """
+        <html><body>
+        <p>Hola <strong>${savedEntity.nombres}</strong>,</p>
+        <p>Se ha detectado un nuevo inicio de sesion en tu cuenta de <strong>Colitas Felices</strong>.</p>
+        <p>Si fuiste tu, puedes ignorar este mensaje.</p>
+        <p>Si no reconoces esta actividad, por favor contacta a soporte de inmediato.</p>
+        <br><p>Saludos,<br>Colitas Felices</p>
+        </body></html>
+    """.trimIndent()
+        val resultadoCorreo = mailAdapter.sendHtmlEmail(
+            to = savedEntity.email,
+            subject = "Nuevo inicio de sesion en Colitas Felices",
+            htmlBody = cuerpoIngreso
+        )
+        if (resultadoCorreo.isFailure) {
+            logger.warn("No se pudo enviar correo de notificacion de ingreso a: ${savedEntity.email}")
+        }
         return savedEntity.toUsuario()
     }
 
@@ -217,5 +244,40 @@ class UsuarioService {
         val saved = usuarioRepository.save(entity)
         logger.info("Usuario actualizado: ${saved.id}")
         return saved.toUsuario()
+    }
+    /**
+     * Elimina logicamente la cuenta de un usuario autenticado (soft delete).
+     * Establece fecha_eliminado y envia correo de confirmacion.
+     *
+     * @param userId ID del usuario a eliminar.
+     * @throws IllegalArgumentException si el usuario no existe o ya fue eliminado.
+     */
+    fun eliminarCuenta(userId: String) {
+        logger.info("Solicitud de eliminacion de cuenta para usuario ID: $userId")
+        val uuid = java.util.UUID.fromString(userId)
+        val entity = usuarioRepository.findById(uuid).orElse(null)
+            ?: throw IllegalArgumentException("Usuario no encontrado.")
+        if (entity.fechaEliminado != null) {
+            logger.warn("Cuenta ya eliminada: $userId")
+            throw IllegalArgumentException("La cuenta ya fue eliminada.")
+        }
+        usuarioRepository.softDeleteById(uuid, java.time.LocalDateTime.now())
+        logger.info("Cuenta eliminada logicamente para usuario ID: $userId")
+        val cuerpoEliminacion = """
+        <html><body>
+        <p>Hola <strong>${entity.nombres}</strong>,</p>
+        <p>Tu cuenta en <strong>Colitas Felices</strong> ha sido eliminada exitosamente.</p>
+        <p>Si no solicitaste esta accion, contacta a soporte de inmediato.</p>
+        <br><p>Saludos,<br>Colitas Felices</p>
+        </body></html>
+    """.trimIndent()
+        val resultado = mailAdapter.sendHtmlEmail(
+            to = entity.email,
+            subject = "Tu cuenta en Colitas Felices ha sido eliminada",
+            htmlBody = cuerpoEliminacion
+        )
+        if (resultado.isFailure) {
+            logger.warn("No se pudo enviar correo de eliminacion a: ${entity.email}")
+        }
     }
 }

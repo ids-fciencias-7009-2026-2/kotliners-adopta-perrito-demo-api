@@ -1,7 +1,7 @@
 package com.kotliners.adoptaPerrito.repositories
 
 import com.kotliners.adoptaPerrito.entities.AnimalEntity
-import com.kotliners.adoptaPerrito.domain.Sexo
+import com.kotliners.adoptaPerrito.domain.Estatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -16,17 +16,12 @@ interface AnimalRepository : JpaRepository<AnimalEntity, UUID> {
     /** Encuentra todos los animales por el ID del dueno */
     fun findAllByUsuarioId(usuarioId: UUID): Iterable<AnimalEntity>
 
+    /** Retorna animales de un cuidador filtrados por estatus. */
+    fun findAllByUsuarioIdAndEstatus(usuarioId: UUID, estatus: Estatus): List<AnimalEntity>
+
     /**
-     * Busca animales disponibles aplicando filtros opcionales.
-     * El join con usuario permite filtrar por codigo postal del cuidador.
-     *
-     * @param especie        Filtra por especie (PERRO/GATO). Null = todos.
-     * @param sexo           Filtra por sexo (MACHO/HEMBRA). Null = todos.
-     * @param esterilizado   Filtra por estado de esterilizacion. Null = todos.
-     * @param codigoPostal   Filtra por codigo postal del cuidador. Null = todos.
-     * @param vacunaNombre   Filtra animales que tienen esta vacuna. Null = todos.
-     * @param sinPadecimientos Si true, solo animales sin padecimientos registrados.
-     * @return Lista de animales que cumplen todos los filtros activos.
+     * Busca animales disponibles aplicando filtros opcionales usando SQL nativo.
+     * El CAST explicito evita errores de tipo null en PostgreSQL/Hibernate.
      */
     @Query(value = """
         SELECT DISTINCT a.* FROM animal a

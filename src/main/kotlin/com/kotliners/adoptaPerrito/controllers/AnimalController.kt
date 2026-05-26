@@ -8,14 +8,20 @@ import com.kotliners.adoptaPerrito.domain.Sexo
 import com.kotliners.adoptaPerrito.dto.request.CreateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.DeleteAnimalRequest
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
+
 import com.kotliners.adoptaPerrito.dto.response.toAnimalResponse
 import com.kotliners.adoptaPerrito.dto.response.toAnimalDetalleResponse
 import com.kotliners.adoptaPerrito.dto.response.VacunaResponse
 import com.kotliners.adoptaPerrito.dto.response.PadecimientoResponse
+
 import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
+
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
+
+import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -386,6 +392,68 @@ class AnimalController {
             ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
     }
+    /**
+     * Retorna el historial de animales adoptados del cuidador autenticado.
+     *
+     * URL:    GET http://localhost:8080/api/animales/historial-adoptados
+     * Headers: Authorization: Bearer <token>
+     */
+    @GetMapping("/historial-adoptados")
+    fun historialAdoptados(
+        @RequestHeader("Authorization", required = true) token: String?
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val cleanToken = token.replace("Bearer ", "").trim()
+        val userFound = userService.findByToken(cleanToken)
+            ?: return ResponseEntity.status(401).body("Token invalido")
+
+        return try {
+            val historial = animalService.historialAdoptados(
+                cuidadorId = userFound.id ?: return ResponseEntity.status(401).body("Token invalido"),
+                rol = userFound.rol
+            )
+            ResponseEntity.ok(historial)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+        }
+    }
 }
 
-// Foto endpoints added via append
+    /**
+     * Marca un animal como inapropiado para adopción.
+     * URL: PATCH /api/animales/{id}/inapropiado
+     * Header: Authorization: Bearer <token>
+      * 
+      * @return ResponseEntity con el resultado de la operación:
+     *      - 200 OK si se marcó como inapropiado
+     *      - 401 Unauthorized si el token es inválido o no se proporciona
+     *      - 403 Forbidden si el usuario no tiene permisos para marcar el animal
+     *      - 404 Not Found si no existe el animal
+     */
+    @PatchMapping("/{id}/inapropiado")
+    fun marcarAnimalInapropiado(
+        @RequestHeader("Authorization", required = true) token: String?,
+        @PathVariable id: String
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud para marcar animal como inapropiado: $id")
+        val userFound = TokenExtractor.resolveUser(token, userService)
+            ?: return ResponseEntity.status(401).body("Token inválido")
+        return try {
+            val updated = animalService.marcarAnimalInapropiado(
+                id,
+                userFound.id!!,
+                userFound.rol
+            )
+            if (updated) {
+                logger.info("Animal marcado como inapropiado: $id")
+                ResponseEntity.ok("Animal marcado como inapropiado")
+            } else {
+                logger.warn("Intento de marcar animal como inapropiado no encontrado: $id")
+                ResponseEntity.status(404).body("Animal no encontrado")
+            }
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Intento de marcar animal como inapropiado sin permisos: $id")
+            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+        }
+    }
+}
