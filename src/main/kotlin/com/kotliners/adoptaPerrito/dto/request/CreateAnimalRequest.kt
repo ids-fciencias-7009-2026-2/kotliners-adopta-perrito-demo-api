@@ -19,8 +19,11 @@ class CreateAnimalRequest (
     @field:Pattern(regexp = "(?i)perro|gato", message = "La especie debe ser Perro o Gato.")
     val especie: String,
 
-    /* Raza del animal (opcional) */
+    /* Raza del animal (texto libre, opcional — se mantiene para compatibilidad) */
     val raza: String? = null,
+
+    /* ID de la raza en el catalogo (FK opcional) */
+    val razaId: String? = null,
 
     /* Fecha de nacimiento del animal */
     @field:NotNull(message = "Por favor, ingresa la fecha de nacimiento.")

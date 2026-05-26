@@ -13,6 +13,7 @@ fun Animal.toAnimalEntity(): AnimalEntity {
         nombre = this.nombre,
         especie = this.especie,
         raza = this.raza,
+        razaId = this.razaId?.let { UUID.fromString(it) },
         fechaNacimiento = this.fechaNacimiento,
         sexo = this.sexo,
         descripcion = this.descripcion,

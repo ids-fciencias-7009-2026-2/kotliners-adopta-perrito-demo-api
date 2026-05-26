@@ -19,7 +19,6 @@ import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
 
-import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -93,6 +92,7 @@ class AnimalController {
             nombre = createRequest.nombre,
             especie = createRequest.especie,
             raza = createRequest.raza,
+            razaId = createRequest.razaId,
             fechaNacimiento = createRequest.fechaNacimiento,
             sexo = createRequest.sexo,
             descripcion = createRequest.descripcion,
@@ -146,12 +146,27 @@ class AnimalController {
     /**
      * - URL: GET /api/animales
      * - Header: Authorization: Bearer <token>
+     * - Query params opcionales (solo para ADOPTANTE):
+     *   especie, sexo, esterilizado, codigoPostal, vacuna, sinPadecimientos, ordenar
       * 
-      * @return ResponseEntity con el resultado de la operación
+      * @return ResponseEntity con el resultado de la operacion
      */
     @GetMapping
     fun listAnimals(
-            @RequestHeader("Authorization", required = true) token: String?
+            @RequestHeader("Authorization", required = true) token: String?,
+            @RequestParam(required = false) especie: String?,
+            @RequestParam(required = false) sexo: String?,
+            @RequestParam(required = false) esterilizado: Boolean?,
+            @RequestParam(required = false) codigoPostal: String?,
+            @RequestParam(required = false) vacuna: String?,
+            @RequestParam(required = false) razaId: String?,
+            @RequestParam(defaultValue = "false") sinPadecimientos: Boolean,
+            @RequestParam(defaultValue = "false") soloVacunados: Boolean,
+            @RequestParam(required = false) edadMinAnios: Int?,
+            @RequestParam(required = false) edadMaxAnios: Int?,
+            @RequestParam(required = false) distanciaKm: Double?,
+            @RequestParam(required = false) ordenar: String?,
+            @RequestParam(defaultValue = "true") ordenDesc: Boolean
     ): ResponseEntity<Any> {
         logger.info("Solicitud para listar animales")
         if (token == null) {
@@ -163,7 +178,7 @@ class AnimalController {
 
         val rol = userFound.rol
 
-        try{
+        try {
             if (rol == Rol.CUIDADOR) {
                 logger.info("Usuario con rol CUIDADOR listando sus animales")
                 val animals = animalService.listAnimalsByOwner(userFound.id!!, rol)
@@ -173,8 +188,35 @@ class AnimalController {
                     animal.toAnimalResponse(foto, interesados)
                 })
             } else {
-                logger.info("Usuario con rol $rol listando todos los animales disponibles")
-                val animals = animalService.searchAllAnimals(rol)
+                // ADOPTANTE: aplica filtros si se proporcionaron
+                val hayFiltros = especie != null || sexo != null || esterilizado != null ||
+                    codigoPostal != null || vacuna != null || razaId != null || sinPadecimientos ||
+                    soloVacunados || edadMinAnios != null || edadMaxAnios != null || distanciaKm != null || ordenar != null
+
+                val animals = if (hayFiltros) {
+                    logger.info("ADOPTANTE usando filtros avanzados")
+                    animalService.buscarAnimalesConFiltros(
+                        requesterRole = rol,
+                        requesterId = userFound.id!!,
+                        especie = especie,
+                        sexo = sexo,
+                        esterilizado = esterilizado,
+                        codigoPostal = codigoPostal,
+                        vacuna = vacuna,
+                        razaId = razaId,
+                        sinPadecimientos = sinPadecimientos,
+                        soloVacunados = soloVacunados,
+                        edadMinAnios = edadMinAnios,
+                        edadMaxAnios = edadMaxAnios,
+                        distanciaKm = distanciaKm,
+                        ordenar = ordenar,
+                        ordenDesc = ordenDesc
+                    )
+                } else {
+                    logger.info("ADOPTANTE listando todos los animales disponibles")
+                    animalService.searchAllAnimals(rol)
+                }
+
                 return ResponseEntity.ok(animals.map { animal ->
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
                     animal.toAnimalResponse(foto)

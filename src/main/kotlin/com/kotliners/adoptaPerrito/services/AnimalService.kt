@@ -4,6 +4,7 @@ import com.kotliners.adoptaPerrito.domain.Animal
 import com.kotliners.adoptaPerrito.domain.toAnimal
 import com.kotliners.adoptaPerrito.domain.Estatus
 import com.kotliners.adoptaPerrito.domain.Rol
+import com.kotliners.adoptaPerrito.domain.Sexo
 
 import com.kotliners.adoptaPerrito.dto.request.UpdateAnimalRequest
 import com.kotliners.adoptaPerrito.dto.response.AnimalDetalleResponse
@@ -60,6 +61,12 @@ class AnimalService {
     @Autowired
     lateinit var animalInteresRepository: com.kotliners.adoptaPerrito.repositories.AnimalInteresRepository
 
+    @Autowired
+    lateinit var codigoPostalRepository: com.kotliners.adoptaPerrito.repositories.CodigoPostalRepository
+
+    @Autowired
+    lateinit var usuarioRepository: com.kotliners.adoptaPerrito.repositories.UsuarioRepository
+
     /** 
      * Crea un nuevo animal y lo persiste en la base de datos
      * 
@@ -76,6 +83,142 @@ class AnimalService {
         val saved = animalRepository.save(entity)
         logger.info("Animal creado con ID: ${saved.id}")
         return saved.toAnimal()
+    }
+
+    /** 
+     * Busca animales disponibles aplicando filtros y ordenamiento opcionales.
+     * Solo accesible para usuarios con rol ADOPTANTE.
+     *
+     * @param requesterRole Rol del usuario que hace la solicitud.
+     * @param especie       Filtra por especie (PERRO/GATO). Null = todos.
+     * @param sexo          Filtra por sexo (MACHO/HEMBRA). Null = todos.
+     * @param esterilizado  Filtra por esterilizacion. Null = todos.
+     * @param codigoPostal  Filtra por codigo postal del cuidador. Null = todos.
+     * @param vacuna        Filtra animales que tienen esta vacuna. Null = todos.
+     * @param sinPadecimientos Si true, solo animales sin padecimientos.
+     * @param ordenar       Campo por el que ordenar: "nombre", "fechaNacimiento", "fechaRegistro".
+     * @return Lista filtrada y ordenada de animales disponibles.
+     */
+    fun buscarAnimalesConFiltros(
+        requesterRole: Rol,
+        requesterId: String,
+        especie: String?,
+        sexo: String?,
+        esterilizado: Boolean?,
+        codigoPostal: String?,
+        vacuna: String?,
+        razaId: String?,
+        sinPadecimientos: Boolean,
+        soloVacunados: Boolean = false,
+        edadMinAnios: Int?,
+        edadMaxAnios: Int?,
+        distanciaKm: Double?,
+        ordenar: String?,
+        ordenDesc: Boolean = true
+    ): List<Animal> {
+        logger.info("Buscando animales con filtros: especie=$especie, sexo=$sexo, edad=$edadMinAnios-$edadMaxAnios, distanciaKm=$distanciaKm")
+        if (requesterRole != Rol.ADOPTANTE) {
+            throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden buscar animales")
+        }
+
+        val sexoEnum = sexo?.uppercase()?.let {
+            try { Sexo.valueOf(it) } catch (e: IllegalArgumentException) { null }
+        }
+        val razaUuid = razaId?.let {
+            try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
+        }
+
+        var latUsuario: Double? = null
+        var lonUsuario: Double? = null
+        if (distanciaKm != null) {
+            val cpAdoptante = usuarioRepository.findById(UUID.fromString(requesterId)).orElse(null)?.codigoPostal
+            if (cpAdoptante != null) {
+                val cpEntity = codigoPostalRepository.findById(cpAdoptante).orElse(null)
+                latUsuario = cpEntity?.latitud?.toDouble()
+                lonUsuario = cpEntity?.longitud?.toDouble()
+            }
+        }
+
+        var resultados = animalRepository.buscarConFiltros(
+            especie = especie?.uppercase(),
+            sexo = sexoEnum?.name,
+            esterilizado = esterilizado,
+            codigoPostal = codigoPostal,
+            vacunaNombre = vacuna,
+            razaId = razaUuid,
+            sinPadecimientos = sinPadecimientos
+        ).map { it.toAnimal() }
+
+        // Filtro de edad en memoria
+        if (edadMinAnios != null || edadMaxAnios != null) {
+            val hoy = java.time.LocalDate.now()
+            resultados = resultados.filter { animal ->
+                val edad = java.time.Period.between(animal.fechaNacimiento, hoy).years
+                (edadMinAnios == null || edad >= edadMinAnios) &&
+                (edadMaxAnios == null || edad <= edadMaxAnios)
+            }
+        }
+
+        // TODO: Implementar logica de esquema de vacunacion por especie y edad.
+        // Requiere tabla vacuna_esquema(especie, edad_min_meses, edad_max_meses, vacuna_id)
+        // para validar si el animal tiene las vacunas esperadas segun su especie y edad.
+
+        // Filtro: solo animales con al menos una vacuna registrada
+        if (soloVacunados) {
+            resultados = resultados.filter { animal ->
+                val uuid = try { UUID.fromString(animal.id ?: "") } catch (e: Exception) { return@filter false }
+                animalVacunaRepository.findByAnimalId(uuid).isNotEmpty()
+            }
+        }
+
+        // Filtro de distancia en memoria usando Haversine
+        if (distanciaKm != null && latUsuario != null && lonUsuario != null) {
+            resultados = resultados.filter { animal ->
+                val cpCuidador = usuarioRepository.findById(UUID.fromString(animal.usuarioId)).orElse(null)?.codigoPostal
+                val cp = cpCuidador?.let { codigoPostalRepository.findById(it).orElse(null) }
+                if (cp != null) {
+                    val lat2 = cp.latitud.toDouble()
+                    val lon2 = cp.longitud.toDouble()
+                    val dLat = Math.toRadians(lat2 - latUsuario)
+                    val dLon = Math.toRadians(lon2 - lonUsuario)
+                    val a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(Math.toRadians(latUsuario)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2)
+                    val distancia = 6371.0 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+                    distancia <= distanciaKm
+                } else true // si no tiene CP con coordenadas, incluir
+            }
+        }
+
+        // Ordenamiento en memoria para evitar complejidad extra en JPQL
+        resultados = when (ordenar?.lowercase()) {
+            "nombre"          -> if (ordenDesc) resultados.sortedByDescending { it.nombre.lowercase() }
+                                 else resultados.sortedBy { it.nombre.lowercase() }
+            "fechanacimiento" -> if (ordenDesc) resultados.sortedByDescending { it.fechaNacimiento }
+                                 else resultados.sortedBy { it.fechaNacimiento }
+            "distancia"       -> if (latUsuario != null && lonUsuario != null) {
+                val sorted = resultados.sortedBy { animal ->
+                    val cpCuidador = usuarioRepository.findById(UUID.fromString(animal.usuarioId)).orElse(null)?.codigoPostal
+                    val cp = cpCuidador?.let { codigoPostalRepository.findById(it).orElse(null) }
+                    if (cp != null) {
+                        val lat2 = cp.latitud.toDouble()
+                        val lon2 = cp.longitud.toDouble()
+                        val dLat = Math.toRadians(lat2 - latUsuario)
+                        val dLon = Math.toRadians(lon2 - lonUsuario)
+                        val a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                            Math.cos(Math.toRadians(latUsuario)) * Math.cos(Math.toRadians(lat2)) *
+                            Math.sin(dLon/2) * Math.sin(dLon/2)
+                        6371.0 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+                    } else Double.MAX_VALUE
+                }
+                if (ordenDesc) sorted.reversed() else sorted
+            } else resultados.sortedByDescending { it.fechaRegistro }
+            else              -> if (ordenDesc) resultados.sortedByDescending { it.fechaRegistro }
+                                 else resultados.sortedBy { it.fechaRegistro }
+        }
+
+        logger.info("Filtros aplicados: ${resultados.size} animales encontrados")
+        return resultados
     }
 
     /** 
@@ -169,6 +312,7 @@ class AnimalService {
         entity.nombre = updates.nombre
         entity.especie = updates.especie
         entity.raza = updates.raza
+        entity.razaId = updates.razaId?.let { java.util.UUID.fromString(it) }
         entity.fechaNacimiento = updates.fechaNacimiento
         entity.sexo = updates.sexo
         entity.descripcion = updates.descripcion

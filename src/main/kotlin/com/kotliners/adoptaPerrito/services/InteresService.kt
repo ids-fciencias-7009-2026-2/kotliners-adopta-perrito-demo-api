@@ -180,7 +180,8 @@ class InteresService {
                 cc = adoptante.email
             )
             if (resultado.isFailure) {
-                logger.warn("No se pudo enviar correo de retiro de interes: ${resultado.exceptionOrNull()?.message}")
+                logger.error("No se pudo enviar correo de retiro de interes: ${resultado.exceptionOrNull()?.message}")
+                throw IllegalStateException("No se pudo notificar al cuidador por correo. El retiro de interes no fue procesado.")
             }
         }
     }
