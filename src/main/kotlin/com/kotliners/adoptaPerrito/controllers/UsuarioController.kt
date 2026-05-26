@@ -217,4 +217,25 @@ class UsuarioController {
             ResponseEntity.status(404).body("Usuario no encontrado")
         }
     }
+    /**
+     * Elimina la cuenta del usuario autenticado.
+     *
+     * URL:    DELETE http://localhost:8080/usuarios/me
+     * Headers: Authorization: Bearer <token>
+     */
+    @DeleteMapping("/me")
+    fun eliminarCuenta(
+        @RequestHeader("Authorization", required = true) token: String?
+    ): ResponseEntity<Any> {
+        logger.info("Solicitud de eliminacion de cuenta recibida")
+        val userFound = TokenExtractor.resolveUser(token, userService)
+            ?: return ResponseEntity.status(401).body(
+                if (token == null) "Token requerido" else "Token invalido"
+            )
+        userService.eliminarCuenta(
+            userFound.id ?: return ResponseEntity.status(401).body("Token invalido")
+        )
+        logger.info("Cuenta eliminada para usuario: ${userFound.email}")
+        return ResponseEntity.ok(mapOf("mensaje" to "Cuenta eliminada exitosamente."))
+    }
 }
