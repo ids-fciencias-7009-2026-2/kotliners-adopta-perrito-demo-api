@@ -20,8 +20,6 @@ import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
 import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
-import com.kotliners.adoptaPerrito.utils.TokenExtractor
-
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
