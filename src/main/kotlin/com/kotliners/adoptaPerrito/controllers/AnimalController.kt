@@ -16,8 +16,6 @@ import com.kotliners.adoptaPerrito.dto.response.PadecimientoResponse
 
 import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
 
-import com.kotliners.adoptaPerrito.utils.TokenExtractor
-
 import com.kotliners.adoptaPerrito.services.AnimalService
 import com.kotliners.adoptaPerrito.services.UsuarioService
 
@@ -374,7 +372,6 @@ class AnimalController {
             ResponseEntity.status(403).body(e.message ?: "No autorizado")
         }
     }
-}
 
     /**
      * Marca un animal como inapropiado para adopción.
