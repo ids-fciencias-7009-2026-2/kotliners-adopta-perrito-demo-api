@@ -28,28 +28,30 @@ interface AnimalRepository : JpaRepository<AnimalEntity, UUID> {
      * @param sinPadecimientos Si true, solo animales sin padecimientos registrados.
      * @return Lista de animales que cumplen todos los filtros activos.
      */
-    @Query("""
-        SELECT DISTINCT a FROM AnimalEntity a
-        JOIN UsuarioEntity u ON a.usuarioId = u.id
-        LEFT JOIN AnimalVacunaEntity av ON av.animalId = a.id
-        LEFT JOIN VacunaEntity v ON v.id = av.vacunaId
+    @Query(value = """
+        SELECT DISTINCT a.* FROM animal a
+        JOIN usuario u ON a.usuario_id = u.usuario_id
+        LEFT JOIN animal_vacuna av ON av.animal_id = a.animal_id
+        LEFT JOIN vacuna v ON v.vacuna_id = av.vacuna_id
         WHERE a.estatus = 'DISPONIBLE'
           AND a.inapropiado = false
-          AND (:especie IS NULL OR UPPER(a.especie) = UPPER(:especie))
-          AND (:sexo IS NULL OR a.sexo = :sexo)
+          AND (CAST(:especie AS VARCHAR) IS NULL OR UPPER(a.especie) = UPPER(CAST(:especie AS VARCHAR)))
+          AND (CAST(:sexo AS VARCHAR) IS NULL OR a.sexo::text = CAST(:sexo AS VARCHAR))
           AND (:esterilizado IS NULL OR a.esterilizado = :esterilizado)
-          AND (:codigoPostal IS NULL OR u.codigoPostal = :codigoPostal)
-          AND (:vacunaNombre IS NULL OR LOWER(v.nombre) = LOWER(:vacunaNombre))
+          AND (CAST(:codigoPostal AS VARCHAR) IS NULL OR u.codigo_postal = CAST(:codigoPostal AS VARCHAR))
+          AND (CAST(:vacunaNombre AS VARCHAR) IS NULL OR (v.nombre IS NOT NULL AND LOWER(v.nombre) = LOWER(CAST(:vacunaNombre AS VARCHAR))))
+          AND (CAST(:razaId AS UUID) IS NULL OR a.raza_id = CAST(:razaId AS UUID))
           AND (:sinPadecimientos = false OR NOT EXISTS (
-              SELECT 1 FROM AnimalPadecimientoEntity ap WHERE ap.animalId = a.id
+              SELECT 1 FROM animal_padecimiento ap WHERE ap.animal_id = a.animal_id
           ))
-    """)
+    """, nativeQuery = true)
     fun buscarConFiltros(
         @Param("especie") especie: String?,
-        @Param("sexo") sexo: Sexo?,
+        @Param("sexo") sexo: String?,
         @Param("esterilizado") esterilizado: Boolean?,
         @Param("codigoPostal") codigoPostal: String?,
         @Param("vacunaNombre") vacunaNombre: String?,
+        @Param("razaId") razaId: UUID?,
         @Param("sinPadecimientos") sinPadecimientos: Boolean
     ): List<AnimalEntity>
 }

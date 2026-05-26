@@ -4,6 +4,7 @@ import com.kotliners.adoptaPerrito.adapters.RazaInfoAdapter
 import com.kotliners.adoptaPerrito.dto.response.RazaCampoResponse
 import com.kotliners.adoptaPerrito.dto.response.RazaInfoResponse
 import com.kotliners.adoptaPerrito.dto.response.RazaResponse
+import com.kotliners.adoptaPerrito.dto.response.TipoCampo
 import com.kotliners.adoptaPerrito.repositories.RazaRepository
 import com.kotliners.adoptaPerrito.services.UsuarioService
 import com.kotliners.adoptaPerrito.utils.TokenExtractor
@@ -81,13 +82,14 @@ class RazaInfoController {
 
         logger.info("Consultando info de raza: '$nombreEnBusqueda' ($especie)")
 
-        val resultado = razaInfoAdapter.buscarRaza(nombreEnBusqueda, especie)
+        val resultado = razaInfoAdapter.buscarRaza(nombreEnBusqueda, especie.uppercase())
             ?: return ResponseEntity.status(404).body("No se encontro informacion para la raza '$nombreEnBusqueda'")
 
         val response = RazaInfoResponse(
-            nombre    = resultado.nombre,
-            imagenUrl = resultado.imagenUrl,
-            campos    = resultado.campos.map { RazaCampoResponse(it.etiqueta, it.valor) }
+            nombre       = resultado.nombre,
+            imagenUrl    = resultado.imagenUrl,
+            wikipediaUrl = resultado.wikipediaUrl,
+            campos       = resultado.campos.map { RazaCampoResponse(it.etiqueta, it.valor, TipoCampo.valueOf(it.tipo)) }
         )
         return ResponseEntity.ok(response)
     }

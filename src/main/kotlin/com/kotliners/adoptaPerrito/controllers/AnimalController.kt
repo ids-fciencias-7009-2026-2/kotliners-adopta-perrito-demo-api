@@ -156,8 +156,14 @@ class AnimalController {
             @RequestParam(required = false) esterilizado: Boolean?,
             @RequestParam(required = false) codigoPostal: String?,
             @RequestParam(required = false) vacuna: String?,
+            @RequestParam(required = false) razaId: String?,
             @RequestParam(defaultValue = "false") sinPadecimientos: Boolean,
-            @RequestParam(required = false) ordenar: String?
+            @RequestParam(defaultValue = "false") soloVacunados: Boolean,
+            @RequestParam(required = false) edadMinAnios: Int?,
+            @RequestParam(required = false) edadMaxAnios: Int?,
+            @RequestParam(required = false) distanciaKm: Double?,
+            @RequestParam(required = false) ordenar: String?,
+            @RequestParam(defaultValue = "true") ordenDesc: Boolean
     ): ResponseEntity<Any> {
         logger.info("Solicitud para listar animales")
         if (token == null) {
@@ -181,19 +187,27 @@ class AnimalController {
             } else {
                 // ADOPTANTE: aplica filtros si se proporcionaron
                 val hayFiltros = especie != null || sexo != null || esterilizado != null ||
-                    codigoPostal != null || vacuna != null || sinPadecimientos || ordenar != null
+                    codigoPostal != null || vacuna != null || razaId != null || sinPadecimientos ||
+                    soloVacunados || edadMinAnios != null || edadMaxAnios != null || distanciaKm != null || ordenar != null
 
                 val animals = if (hayFiltros) {
                     logger.info("ADOPTANTE usando filtros avanzados")
                     animalService.buscarAnimalesConFiltros(
                         requesterRole = rol,
+                        requesterId = userFound.id!!,
                         especie = especie,
                         sexo = sexo,
                         esterilizado = esterilizado,
                         codigoPostal = codigoPostal,
                         vacuna = vacuna,
+                        razaId = razaId,
                         sinPadecimientos = sinPadecimientos,
-                        ordenar = ordenar
+                        soloVacunados = soloVacunados,
+                        edadMinAnios = edadMinAnios,
+                        edadMaxAnios = edadMaxAnios,
+                        distanciaKm = distanciaKm,
+                        ordenar = ordenar,
+                        ordenDesc = ordenDesc
                     )
                 } else {
                     logger.info("ADOPTANTE listando todos los animales disponibles")
