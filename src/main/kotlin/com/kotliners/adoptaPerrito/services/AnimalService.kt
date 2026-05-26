@@ -386,6 +386,17 @@ class AnimalService {
     }
 
     /**
+     * Obtiene las coordenadas (latitud, longitud) del cuidador de un animal
+     * a partir de su codigo postal. Devuelve null si no se encuentran.
+     */
+    fun getCoordsForAnimal(animal: Animal): Pair<Double, Double>? {
+        val cpCuidador = usuarioRepository.findById(java.util.UUID.fromString(animal.usuarioId))
+            .orElse(null)?.codigoPostal ?: return null
+        val cp = codigoPostalRepository.findById(cpCuidador).orElse(null) ?: return null
+        return Pair(cp.latitud.toDouble(), cp.longitud.toDouble())
+    }
+
+    /**
      * Obtiene la URL de la primera foto de un animal, o null si no tiene.
      */
     fun getPrimeraFoto(animalId: String): String? {
