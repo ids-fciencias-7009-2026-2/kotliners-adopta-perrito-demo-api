@@ -192,14 +192,19 @@ class UsuarioService {
         <br><p>Saludos,<br>Colitas Felices</p>
         </body></html>
     """.trimIndent()
-        val resultadoCorreo = mailAdapter.sendHtmlEmail(
-            to = savedEntity.email,
-            subject = "Nuevo inicio de sesion en Colitas Felices",
-            htmlBody = cuerpoIngreso
-        )
-        if (resultadoCorreo.isFailure) {
-            logger.warn("No se pudo enviar correo de notificacion de ingreso a: ${savedEntity.email}")
-        }
+        // Enviar correo en hilo separado para no bloquear la respuesta HTTP
+        val emailTo = savedEntity.email
+        val emailNombre = savedEntity.nombres
+        Thread {
+            val resultadoCorreo = mailAdapter.sendHtmlEmail(
+                to = emailTo,
+                subject = "Nuevo inicio de sesion en Colitas Felices",
+                htmlBody = cuerpoIngreso
+            )
+            if (resultadoCorreo.isFailure) {
+                logger.warn("No se pudo enviar correo de notificacion de ingreso a: $emailTo")
+            }
+        }.start()
         return savedEntity.toUsuario()
     }
 
@@ -295,21 +300,25 @@ class UsuarioService {
         }
         usuarioRepository.softDeleteById(uuid, java.time.LocalDateTime.now())
         logger.info("Cuenta eliminada logicamente para usuario ID: $userId")
+        val emailTo = entity.email
+        val emailNombre = entity.nombres
         val cuerpoEliminacion = """
         <html><body>
-        <p>Hola <strong>${entity.nombres}</strong>,</p>
+        <p>Hola <strong>${emailNombre}</strong>,</p>
         <p>Tu cuenta en <strong>Colitas Felices</strong> ha sido eliminada exitosamente.</p>
         <p>Si no solicitaste esta accion, contacta a soporte de inmediato.</p>
         <br><p>Saludos,<br>Colitas Felices</p>
         </body></html>
     """.trimIndent()
-        val resultado = mailAdapter.sendHtmlEmail(
-            to = entity.email,
-            subject = "Tu cuenta en Colitas Felices ha sido eliminada",
-            htmlBody = cuerpoEliminacion
-        )
-        if (resultado.isFailure) {
-            logger.warn("No se pudo enviar correo de eliminacion a: ${entity.email}")
-        }
+        Thread {
+            val resultado = mailAdapter.sendHtmlEmail(
+                to = emailTo,
+                subject = "Tu cuenta en Colitas Felices ha sido eliminada",
+                htmlBody = cuerpoEliminacion
+            )
+            if (resultado.isFailure) {
+                logger.warn("No se pudo enviar correo de eliminacion a: $emailTo")
+            }
+        }.start()
     }
 }
