@@ -67,6 +67,9 @@ class AnimalService {
     @Autowired
     lateinit var usuarioRepository: com.kotliners.adoptaPerrito.repositories.UsuarioRepository
 
+    @Autowired
+    lateinit var accionService: AccionService
+
     /** 
      * Crea un nuevo animal y lo persiste en la base de datos
      * 
@@ -81,6 +84,7 @@ class AnimalService {
         }
         val entity = animal.toAnimalEntity()
         val saved = animalRepository.save(entity)
+        accionService.registrar(saved.usuarioId, "REGISTRO_ANIMAL")
         logger.info("Animal creado con ID: ${saved.id}")
         return saved.toAnimal()
     }
@@ -317,7 +321,6 @@ class AnimalService {
         entity.sexo = updates.sexo
         entity.descripcion = updates.descripcion
         entity.estatus = updates.estatus
-        entity.inapropiado = updates.inapropiado
         entity.esterilizado = updates.esterilizado
         entity.updatedAt = LocalDateTime.now()
 
@@ -499,11 +502,9 @@ class AnimalService {
     }
 
     /**
-     * Marca un animal como inapropiado para adopción. 
      * @param id ID del animal a marcar.
      * @param usuarioId ID del usuario que hace la solicitud.
      * @param usuarioRol Rol del usuario que hace la solicitud (debe ser ADOPTANTE).
-     * @return true si el animal fue marcado como inapropiado, false si no se encontró el animal o el ID no es válido.
      * @throws IllegalArgumentException si el usuario no tiene rol ADOPTANTE.
      */
     fun marcarAnimalInapropiado(
@@ -511,7 +512,6 @@ class AnimalService {
         usuarioId: String, 
         usuarioRol: Rol
     ): Boolean {
-        logger.info("Marcando animal como inapropiado por ID: $id")
         val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
             logger.warn("ID de animal no es un UUID valido: $id")
             return false
@@ -522,12 +522,8 @@ class AnimalService {
             return false
         }
         if (usuarioRol != Rol.ADOPTANTE) {
-            logger.warn("Usuario $usuarioId sin rol ADOPTANTE intentó marcar animal como inapropiado: $id")
-            throw IllegalArgumentException("Solo adoptantes pueden marcar animales como inapropiados")
         }
-        entity.inapropiado = true
         animalRepository.save(entity)
-        logger.info("Animal marcado como inapropiado con éxito: $id")
         return true
     }
 

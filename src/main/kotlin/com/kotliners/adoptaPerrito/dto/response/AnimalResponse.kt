@@ -63,8 +63,8 @@ fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0
     fechaRegistro = this.fechaRegistro,
     fotoPortada = fotoPortada,
     numInteresados = numInteresados,
-    latitud = latitud,
-    longitud = longitud
+    latitud = latitud?.let { Math.round(it * 100.0) / 100.0 },
+    longitud = longitud?.let { Math.round(it * 100.0) / 100.0 }
 )
 
 fun Animal.toAnimalDetalleResponse(
