@@ -99,15 +99,44 @@ class UsuarioController {
     @PostMapping("/register")
     fun agregaUsuario(
         @Valid @RequestBody createUsuarioRequest: CreateUsuarioRequest
-    ): ResponseEntity<RegisterResponse> {
+    ): ResponseEntity<Any> {
         logger.info("Solicitud de registro recibida para: ${createUsuarioRequest.email}")
+
+        // Validar complejidad de contraseña
+        val pwd = createUsuarioRequest.password
+        val passwordErrors = mutableListOf<String>()
+        if (pwd.length < 8) passwordErrors.add("mínimo 8 caracteres")
+        if (!pwd.any { it.isUpperCase() }) passwordErrors.add("al menos una mayúscula")
+        if (!pwd.any { it.isLowerCase() }) passwordErrors.add("al menos una minúscula")
+        if (!pwd.any { it.isDigit() }) passwordErrors.add("al menos un número")
+        if (!pwd.any { !it.isLetterOrDigit() }) passwordErrors.add("al menos un carácter especial")
+        if (passwordErrors.isNotEmpty()) {
+            return ResponseEntity.badRequest().body(
+                mapOf("error" to "La contraseña debe contener: ${passwordErrors.joinToString(", ")}")
+            )
+        }
+
         val usuarioCreado = createUsuarioRequest.toUsuario()
         val usuarioConPasswordHash = usuarioCreado.copy(password = PasswordUtil.hash(usuarioCreado.password))
         val usuarioGuardado = userService.addNewUsuario(usuarioConPasswordHash)
         logger.info("Usuario registrado exitosamente: ${usuarioGuardado.email}")
         return ResponseEntity.status(201).body(
-            RegisterResponse(usuario = usuarioGuardado.toUsuarioResponse(), mensaje = "Usuario registrado exitosamente")
+            RegisterResponse(usuario = usuarioGuardado.toUsuarioResponse(), mensaje = "Usuario registrado. Revisa tu correo para verificar tu cuenta.")
         )
+    }
+
+    /**
+     * Endpoint para verificar el correo electrónico del usuario.
+     * URL:    GET http://localhost:8080/usuarios/verificar-correo?token=xxx
+     */
+    @GetMapping("/verificar-correo")
+    fun verificarCorreo(@RequestParam token: String): ResponseEntity<Any> {
+        return try {
+            userService.verificarCorreo(token)
+            ResponseEntity.ok(mapOf("mensaje" to "Correo verificado exitosamente. Ya puedes iniciar sesión."))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(400).body(e.message)
+        }
     }
 
     /**
@@ -135,15 +164,44 @@ class UsuarioController {
         @Valid @RequestBody loginRequest: LoginRequest
     ): ResponseEntity<Any> {
         logger.info("Intento de login con: ${loginRequest.email}")
+        return try {
+            val userFound = userService.login(loginRequest.email, loginRequest.password)
+            if (userFound != null) {
+                ResponseEntity.ok(mapOf("requiere2fa" to true, "email" to userFound.email))
+            } else {
+                ResponseEntity.status(401).body("Credenciales incorrectas")
+            }
+        } catch (e: IllegalStateException) {
+            when (e.message) {
+                "CUENTA_BLOQUEADA" -> ResponseEntity.status(423).body("Cuenta bloqueada temporalmente. Intenta en 15 minutos.")
+                "CORREO_NO_VERIFICADO" -> ResponseEntity.status(403).body("Debes verificar tu correo antes de iniciar sesion.")
+                else -> ResponseEntity.status(400).body(e.message)
+            }
+        }
+    }
 
-        val userFound = userService.login(loginRequest.email, loginRequest.password)
-
-        return if (userFound != null) {
-            logger.info("Login exitoso para: ${userFound.email}")
-            ResponseEntity.ok(LoginResponse(userFound.token.orEmpty()))
-        } else {
-            logger.warn("Login fallido para: ${loginRequest.email}")
-            ResponseEntity.status(401).body("Credenciales incorrectas")
+    /**
+     * Valida el código 2FA y otorga el token de sesión.
+     * URL:    POST /usuarios/verificar-2fa
+     * Body:   { "email": "...", "codigo": "123456" }
+     */
+    @PostMapping("/verificar-2fa")
+    fun verificar2fa(@RequestBody body: Map<String, String>): ResponseEntity<Any> {
+        val email = body["email"] ?: return ResponseEntity.badRequest().body("Email requerido")
+        val codigo = body["codigo"] ?: return ResponseEntity.badRequest().body("Codigo requerido")
+        return try {
+            val user = userService.verificar2fa(email, codigo)
+            if (user != null) {
+                ResponseEntity.ok(LoginResponse(user.token.orEmpty()))
+            } else {
+                ResponseEntity.status(401).body("Verificacion fallida")
+            }
+        } catch (e: IllegalStateException) {
+            when (e.message) {
+                "CODIGO_EXPIRADO" -> ResponseEntity.status(410).body("El codigo ha expirado. Inicia sesion de nuevo.")
+                "CODIGO_INCORRECTO" -> ResponseEntity.status(401).body("Codigo incorrecto.")
+                else -> ResponseEntity.status(400).body(e.message)
+            }
         }
     }
 

@@ -7,5 +7,7 @@ enum class Rol {
     /* Rol de usuario adoptante */
     ADOPTANTE,
     /* Rol de usuario cuidador */
-    CUIDADOR
+    CUIDADOR,
+    /* Rol de administrador del sistema */
+    ADMINISTRADOR
 }

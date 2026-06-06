@@ -110,4 +110,7 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
     @Transactional
     @Query("update UsuarioEntity u set u.fechaEliminado = :fecha, u.token = null where u.id = :id")
     fun softDeleteById(id: UUID, fecha: java.time.LocalDateTime)
+
+    @Query("select u from UsuarioEntity u where u.tokenVerificacion = :token")
+    fun findByTokenVerificacion(token: String): UsuarioEntity?
 }
