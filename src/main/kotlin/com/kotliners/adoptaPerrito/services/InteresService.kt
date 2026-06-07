@@ -50,6 +50,9 @@ class InteresService {
     @Autowired
     lateinit var fotoAnimalRepository: com.kotliners.adoptaPerrito.repositories.FotoAnimalRepository
 
+    @Autowired
+    lateinit var accionService: AccionService
+
     /**
      * Registra el interes de un usuario ADOPTANTE en un animal DISPONIBLE.
      * Valida que el usuario sea ADOPTANTE y que el animal exista y este disponible.
@@ -96,6 +99,7 @@ class InteresService {
 
         val entity = AnimalInteresEntity(usuarioId = usuarioUuid, animalId = animalUuid)
         val saved = interesRepository.save(entity)
+        accionService.registrar(usuarioUuid, "MANIFESTAR_INTERES")
         logger.info("Interes registrado correctamente")
 
         // Enviar correo al cuidador del animal notificando el interes del adoptante
@@ -258,6 +262,7 @@ class InteresService {
                     adoptanteId = adoptante.id.toString(),
                     nombreAdoptante = "${adoptante.nombres} ${adoptante.apellidoPaterno}",
                     emailAdoptante = adoptante.email,
+                    fotoAdoptante = adoptante.fotoPerfil,
                     fechaInteres = interes.fecha
                 )
             }

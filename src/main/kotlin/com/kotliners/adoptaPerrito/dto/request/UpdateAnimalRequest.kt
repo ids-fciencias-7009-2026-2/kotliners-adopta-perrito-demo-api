@@ -42,9 +42,6 @@ data class UpdateAnimalRequest(
     @field:NotNull(message = "Por favor, indica el estatus del animal.")
     val estatus: Estatus,
 
-    /* Indica si el animal fue marcado como inapropiado */
-    @field:NotNull(message = "Por favor, indica si es inapropiado o no.")
-    val inapropiado: Boolean,
 
     /* Indica si el animal está esterilizado */
     @field:NotNull(message = "Por favor, indica si está esterilizado.")
