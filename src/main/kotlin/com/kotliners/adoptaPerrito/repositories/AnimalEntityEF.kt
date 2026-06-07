@@ -20,7 +20,6 @@ fun Animal.toAnimalEntity(): AnimalEntity {
         estatus = this.estatus,
         usuarioId = UUID.fromString(this.usuarioId),
         fechaRegistro = this.fechaRegistro,
-        inapropiado = this.inapropiado,
         esterilizado = this.esterilizado,
         updatedAt = this.updatedAt
     )

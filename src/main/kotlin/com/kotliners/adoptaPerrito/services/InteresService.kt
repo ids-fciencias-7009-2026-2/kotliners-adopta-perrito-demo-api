@@ -50,6 +50,9 @@ class InteresService {
     @Autowired
     lateinit var fotoAnimalRepository: com.kotliners.adoptaPerrito.repositories.FotoAnimalRepository
 
+    @Autowired
+    lateinit var accionService: AccionService
+
     /**
      * Registra el interes de un usuario ADOPTANTE en un animal DISPONIBLE.
      * Valida que el usuario sea ADOPTANTE y que el animal exista y este disponible.
@@ -96,23 +99,16 @@ class InteresService {
 
         val entity = AnimalInteresEntity(usuarioId = usuarioUuid, animalId = animalUuid)
         val saved = interesRepository.save(entity)
+        accionService.registrar(usuarioUuid, "MANIFESTAR_INTERES")
         logger.info("Interes registrado correctamente")
 
         // Enviar correo al cuidador del animal notificando el interes del adoptante
         val cuidador = usuarioRepository.findById(animal.usuarioId!!).orElse(null)
         val adoptante = usuarioRepository.findById(usuarioUuid).orElse(null)
         if (cuidador != null && adoptante != null) {
-            val asunto = "Nuevo interes en ${animal.nombre}"
-            val cuerpo = """
-                <html><body>
-                <p>Hola <strong>${cuidador.nombres}</strong>,</p>
-                <p><strong>${adoptante.nombres} ${adoptante.apellidoPaterno}</strong> ha mostrado interes en tu animal <strong>${animal.nombre}</strong>.</p>
-                <p>Su correo de contacto es: <a href="mailto:${adoptante.email}">${adoptante.email}</a></p>
-                <p>Por favor contacta al adoptante para continuar el proceso de adopcion.</p>
-                <br>
-                <p>Saludos,<br>Colitas Felices</p>
-                </body></html>
-            """.trimIndent()
+            val (asunto, cuerpo) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.interesManifestado(
+                cuidador.nombres, "${adoptante.nombres} ${adoptante.apellidoPaterno}", animal.nombre, adoptante.email
+            )
             val resultado = mailAdapter.sendHtmlEmail(
                 to = cuidador.email,
                 subject = asunto,
@@ -163,16 +159,9 @@ class InteresService {
         val cuidador = animal?.usuarioId?.let { usuarioRepository.findById(it).orElse(null) }
         val adoptante = usuarioRepository.findById(usuarioUuid).orElse(null)
         if (animal != null && cuidador != null && adoptante != null) {
-            val asunto = "Actualizacion sobre ${animal.nombre} — interes retirado"
-            val cuerpo = """
-                <html><body>
-                <p>Hola <strong>${cuidador.nombres}</strong>,</p>
-                <p>Te informamos que <strong>${adoptante.nombres} ${adoptante.apellidoPaterno}</strong> ha retirado su interes en <strong>${animal.nombre}</strong>.</p>
-                <p>No te preocupes, tu mascota sigue disponible para otros adoptantes en Colitas Felices.</p>
-                <br>
-                <p>Saludos,<br>Colitas Felices</p>
-                </body></html>
-            """.trimIndent()
+            val (asunto, cuerpo) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.interesRetirado(
+                cuidador.nombres, "${adoptante.nombres} ${adoptante.apellidoPaterno}", animal.nombre
+            )
             val resultado = mailAdapter.sendHtmlEmail(
                 to = cuidador.email,
                 subject = asunto,
@@ -258,6 +247,7 @@ class InteresService {
                     adoptanteId = adoptante.id.toString(),
                     nombreAdoptante = "${adoptante.nombres} ${adoptante.apellidoPaterno}",
                     emailAdoptante = adoptante.email,
+                    fotoAdoptante = adoptante.fotoPerfil,
                     fechaInteres = interes.fecha
                 )
             }

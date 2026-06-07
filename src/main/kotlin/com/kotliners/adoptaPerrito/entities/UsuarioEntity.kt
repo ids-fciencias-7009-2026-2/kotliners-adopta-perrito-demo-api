@@ -70,6 +70,34 @@ data class UsuarioEntity(
     @Column(name = "token")
     var token: String? = null,
 
+    /** Código 2FA enviado por correo */
+    @Column(name = "codigo_2fa", length = 6)
+    var codigo2fa: String? = null,
+
+    /** Fecha de expiración del código 2FA */
+    @Column(name = "codigo_2fa_expira")
+    var codigo2faExpira: LocalDateTime? = null,
+
+    /** Intentos fallidos consecutivos de login */
+    @Column(name = "intentos_fallidos")
+    var intentosFallidos: Int = 0,
+
+    /** Fecha hasta la cual la cuenta está bloqueada */
+    @Column(name = "bloqueado_hasta")
+    var bloqueadoHasta: LocalDateTime? = null,
+
+    /** Si el correo fue verificado */
+    @Column(name = "verificado")
+    var verificado: Boolean = false,
+
+    /** Token para verificar correo */
+    @Column(name = "token_verificacion")
+    var tokenVerificacion: String? = null,
+
+    /** Token para recuperar contraseña */
+    @Column(name = "token_recuperacion")
+    var tokenRecuperacion: String? = null,
+
     /** Fecha de última actualización del perfil */
     @Column(name = "fecha_update")
     var fechaUpdate: LocalDateTime? = null,

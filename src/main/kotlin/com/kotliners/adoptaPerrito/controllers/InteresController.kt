@@ -142,4 +142,22 @@ class InteresController {
         val intereses: List<InteresRecibidoResponse> = interesService.listarInteresesRecibidos(usuario.id!!, limit, offset)
         return ResponseEntity.ok(intereses)
     }
+
+    /**
+     * Listar adoptantes interesados en un animal especifico del cuidador.
+     * URL:    GET /api/animales/{id}/interesados
+     * Header: Authorization: Bearer <token>
+     */
+    @GetMapping("/api/animales/{id}/interesados")
+    fun listarInteresadosPorAnimal(
+        @RequestHeader("Authorization", required = false) token: String?,
+        @PathVariable("id") animalId: String
+    ): ResponseEntity<Any> {
+        if (token == null) return ResponseEntity.status(401).body("Token requerido")
+        val usuario = resolveUser(token) ?: return ResponseEntity.status(401).body("Token invalido")
+
+        val intereses = interesService.listarInteresesRecibidos(usuario.id!!, 100, 0)
+            .filter { it.animalId == animalId }
+        return ResponseEntity.ok(intereses)
+    }
 }

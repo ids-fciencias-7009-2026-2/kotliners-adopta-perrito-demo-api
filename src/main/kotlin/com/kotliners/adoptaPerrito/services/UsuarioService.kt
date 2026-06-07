@@ -39,6 +39,9 @@ class UsuarioService {
     @Autowired
     lateinit var mailAdapter: com.kotliners.adoptaPerrito.adapters.MailAdapter
 
+    @Autowired
+    lateinit var accionService: AccionService
+
     /**
      * Valida que el codigo postal tenga exactamente 5 digitos numericos.
      * Protege la capa de servicio ante llamadas directas sin pasar por el DTO.
@@ -74,8 +77,8 @@ class UsuarioService {
                 set("User-Agent", "ColitasFelices/1.0 (contacto@colitas.mx)")
             }
             val entity = org.springframework.http.HttpEntity<Void>(headers)
-            @Suppress("UNCHECKED_CAST")
             val response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, List::class.java)
+            @Suppress("UNCHECKED_CAST")
             val results = response.body as? List<Map<String, Any?>>
             if (results.isNullOrEmpty()) {
                 logger.warn("Nominatim no encontro coordenadas para CP $cp, usando fallback")
@@ -146,11 +149,70 @@ class UsuarioService {
         validateUsuario(usuarioEntity)
         validateCodigoPostal(usuarioEntity.codigoPostal)
         ensureCodigoPostalExists(usuarioEntity.codigoPostal)
+        // Generar token de verificación de correo
+        usuarioEntity.tokenVerificacion = UUID.randomUUID().toString()
+        usuarioEntity.verificado = false
         val savedEntity = usuarioRepository.save(usuarioEntity)
         logger.info("Usuario guardado con ID: ${savedEntity.id}")
+        // Enviar correo de verificación
+        enviarCorreoVerificacion(savedEntity)
         val usuarioGuardado = savedEntity.toUsuario()
         usuarioGuardado.password = "****"
         return usuarioGuardado
+    }
+
+    /**
+     * Envía correo de verificación al usuario.
+     */
+    private fun enviarCorreoVerificacion(entity: UsuarioEntity) {
+        try {
+            val enlace = "http://localhost:3000/login?verificar=${entity.tokenVerificacion}"
+            val (subject, body) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.verificacionCorreo(entity.nombres, enlace)
+            mailAdapter.sendHtmlEmail(entity.email, subject, body)
+            logger.info("Correo de verificación enviado a: ${entity.email}")
+        } catch (e: Exception) {
+            logger.error("Error al enviar correo de verificación: ${e.message}")
+        }
+    }
+
+    /**
+     * Verifica el correo del usuario con el token enviado por correo.
+     */
+    fun verificarCorreo(token: String): Boolean {
+        val entity = usuarioRepository.findByTokenVerificacion(token)
+            ?: throw IllegalArgumentException("Token de verificación inválido o expirado")
+        entity.verificado = true
+        entity.tokenVerificacion = null
+        usuarioRepository.save(entity)
+        logger.info("Correo verificado para usuario: ${entity.id}")
+        return true
+    }
+
+    /**
+     * Solicita recuperación de contraseña. Genera token y envía correo con enlace.
+     */
+    fun solicitarRecuperacion(email: String) {
+        val entity = usuarioRepository.findByEmail(email) ?: return // No revelar si existe
+        val token = UUID.randomUUID().toString()
+        entity.tokenRecuperacion = token
+        usuarioRepository.save(entity)
+
+        val enlace = "http://localhost:3000/recuperar?token=$token"
+        val (subjectRecup, bodyRecup) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.recuperarContrasena(entity.nombres, enlace)
+        mailAdapter.sendHtmlEmail(entity.email, subjectRecup, bodyRecup)
+        logger.info("Correo de recuperacion enviado a: $email")
+    }
+
+    /**
+     * Restablece la contraseña usando el token de recuperación.
+     */
+    fun restablecerPassword(token: String, nuevaPassword: String) {
+        val entity = usuarioRepository.findByTokenRecuperacion(token)
+            ?: throw IllegalArgumentException("Token de recuperación inválido o expirado")
+        entity.password = PasswordUtil.hash(nuevaPassword)
+        entity.tokenRecuperacion = null
+        usuarioRepository.save(entity)
+        logger.info("Contraseña restablecida para usuario: ${entity.id}")
     }
 
     /**
@@ -169,38 +231,70 @@ class UsuarioService {
             logger.warn("Login fallido: email no encontrado: $email")
             return null
         }
-        //Bloqueador de cuentas eliminadas
         if (usuarioEntity.fechaEliminado != null) {
             logger.warn("Login fallido: cuenta eliminada para: $email")
             return null
         }
+        if (!usuarioEntity.verificado) {
+            throw IllegalStateException("CORREO_NO_VERIFICADO")
+        }
+        if (usuarioEntity.bloqueadoHasta != null && usuarioEntity.bloqueadoHasta!!.isAfter(LocalDateTime.now())) {
+            throw IllegalStateException("CUENTA_BLOQUEADA")
+        }
         if (!PasswordUtil.matches(password, usuarioEntity.password)) {
             logger.warn("Login fallido: contrasena incorrecta para: $email")
+            usuarioEntity.intentosFallidos += 1
+            if (usuarioEntity.intentosFallidos >= 5) {
+                usuarioEntity.bloqueadoHasta = LocalDateTime.now().plusMinutes(15)
+                usuarioEntity.intentosFallidos = 0
+            }
+            usuarioRepository.save(usuarioEntity)
             return null
         }
-        val token = tokenGenerator()
-        usuarioEntity.token = token
-        val savedEntity = usuarioRepository.save(usuarioEntity)
-        logger.info("Login exitoso para: ${savedEntity.email}")
-        // Notificacion del ingreso exitoso
-        val cuerpoIngreso = """
-        <html><body>
-        <p>Hola <strong>${savedEntity.nombres}</strong>,</p>
-        <p>Se ha detectado un nuevo inicio de sesion en tu cuenta de <strong>Colitas Felices</strong>.</p>
-        <p>Si fuiste tu, puedes ignorar este mensaje.</p>
-        <p>Si no reconoces esta actividad, por favor contacta a soporte de inmediato.</p>
-        <br><p>Saludos,<br>Colitas Felices</p>
-        </body></html>
-    """.trimIndent()
-        val resultadoCorreo = mailAdapter.sendHtmlEmail(
-            to = savedEntity.email,
-            subject = "Nuevo inicio de sesion en Colitas Felices",
-            htmlBody = cuerpoIngreso
-        )
-        if (resultadoCorreo.isFailure) {
-            logger.warn("No se pudo enviar correo de notificacion de ingreso a: ${savedEntity.email}")
+        // Credenciales correctas: resetear intentos y enviar código 2FA
+        usuarioEntity.intentosFallidos = 0
+        usuarioEntity.bloqueadoHasta = null
+        val codigo = (100000..999999).random().toString()
+        usuarioEntity.codigo2fa = codigo
+        usuarioEntity.codigo2faExpira = LocalDateTime.now().plusMinutes(10)
+        usuarioRepository.save(usuarioEntity)
+
+        val (subject2fa, body2fa) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.codigo2fa(usuarioEntity.nombres, codigo)
+        mailAdapter.sendHtmlEmail(usuarioEntity.email, subject2fa, body2fa)
+        logger.info("Codigo 2FA enviado a: $email")
+
+        val usuario = usuarioEntity.toUsuario()
+        usuario.password = "****"
+        return usuario
+    }
+
+    /**
+     * Valida el código 2FA y otorga el token de sesión.
+     */
+    fun verificar2fa(email: String, codigo: String): Usuario? {
+        val entity = usuarioRepository.findByEmail(email) ?: return null
+        if (entity.codigo2fa == null || entity.codigo2faExpira == null) {
+            throw IllegalStateException("No hay código pendiente")
         }
-        return savedEntity.toUsuario()
+        if (entity.codigo2faExpira!!.isBefore(LocalDateTime.now())) {
+            entity.codigo2fa = null
+            entity.codigo2faExpira = null
+            usuarioRepository.save(entity)
+            throw IllegalStateException("CODIGO_EXPIRADO")
+        }
+        if (entity.codigo2fa != codigo) {
+            throw IllegalStateException("CODIGO_INCORRECTO")
+        }
+        entity.codigo2fa = null
+        entity.codigo2faExpira = null
+        entity.token = tokenGenerator()
+        val saved = usuarioRepository.save(entity)
+
+        // Notificación de ingreso exitoso
+        val (subjectLogin, bodyLogin) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.loginExitoso(saved.nombres)
+        mailAdapter.sendHtmlEmail(saved.email, subjectLogin, bodyLogin)
+        accionService.registrar(saved.id, "LOGIN")
+        return saved.toUsuario()
     }
 
     /**
@@ -267,13 +361,24 @@ class UsuarioService {
         entity.nombres = request.nombres
         entity.apellidoPaterno = request.apellidoPaterno
         entity.apellidoMaterno = request.apellidoMaterno
+        val emailCambio = entity.email != request.email
         entity.email = request.email
         validateCodigoPostal(request.codigoPostal)
         ensureCodigoPostalExists(request.codigoPostal)
         entity.codigoPostal = request.codigoPostal
         if (request.fotoPerfil != null) entity.fotoPerfil = request.fotoPerfil
         entity.fechaUpdate = LocalDateTime.now()
+        // Si cambió el correo, requiere re-verificación
+        if (emailCambio) {
+            entity.verificado = false
+            entity.tokenVerificacion = UUID.randomUUID().toString()
+            entity.token = null // Invalida sesión para forzar re-login tras verificar
+        }
         val saved = usuarioRepository.save(entity)
+        if (emailCambio) {
+            enviarCorreoVerificacion(saved)
+        }
+        accionService.registrar(saved.id, "ACTUALIZACION_PERFIL")
         logger.info("Usuario actualizado: ${saved.id}")
         return saved.toUsuario()
     }
@@ -294,19 +399,13 @@ class UsuarioService {
             throw IllegalArgumentException("La cuenta ya fue eliminada.")
         }
         usuarioRepository.softDeleteById(uuid, java.time.LocalDateTime.now())
+        accionService.registrar(uuid, "ELIMINACION_CUENTA")
         logger.info("Cuenta eliminada logicamente para usuario ID: $userId")
-        val cuerpoEliminacion = """
-        <html><body>
-        <p>Hola <strong>${entity.nombres}</strong>,</p>
-        <p>Tu cuenta en <strong>Colitas Felices</strong> ha sido eliminada exitosamente.</p>
-        <p>Si no solicitaste esta accion, contacta a soporte de inmediato.</p>
-        <br><p>Saludos,<br>Colitas Felices</p>
-        </body></html>
-    """.trimIndent()
+        val (subjectElim, bodyElim) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.cuentaEliminada(entity.nombres)
         val resultado = mailAdapter.sendHtmlEmail(
             to = entity.email,
-            subject = "Tu cuenta en Colitas Felices ha sido eliminada",
-            htmlBody = cuerpoEliminacion
+            subject = subjectElim,
+            htmlBody = bodyElim
         )
         if (resultado.isFailure) {
             logger.warn("No se pudo enviar correo de eliminacion a: ${entity.email}")

@@ -21,7 +21,9 @@ class AnimalResponse(
     val fotoPortada: String? = null,
     val numInteresados: Int = 0,
     val latitud: Double? = null,
-    val longitud: Double? = null
+    val longitud: Double? = null,
+    val cuidadorUsername: String? = null,
+    val cuidadorFoto: String? = null
 )
 
 /** DTO de respuesta detallado — incluye fotos, vacunas y padecimientos. */
@@ -41,14 +43,16 @@ class AnimalDetalleResponse(
     val fotos: List<String>,
     val vacunas: List<String>,
     val padecimientos: List<String>,
-    val numInteresados: Int = 0
+    val numInteresados: Int = 0,
+    val cuidadorUsername: String? = null,
+    val cuidadorFoto: String? = null
 )
 
 /**
  * Convierte un Animal de dominio a AnimalResponse (listado).
  * Acepta opcionalmente la primera foto para mostrar en tarjetas.
  */
-fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0, latitud: Double? = null, longitud: Double? = null) = AnimalResponse(
+fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0, latitud: Double? = null, longitud: Double? = null, cuidadorUsername: String? = null, cuidadorFoto: String? = null) = AnimalResponse(
     id = this.id ?: "",
     nombre = this.nombre,
     especie = this.especie,
@@ -63,15 +67,19 @@ fun Animal.toAnimalResponse(fotoPortada: String? = null, numInteresados: Int = 0
     fechaRegistro = this.fechaRegistro,
     fotoPortada = fotoPortada,
     numInteresados = numInteresados,
-    latitud = latitud,
-    longitud = longitud
+    latitud = latitud?.let { Math.round(it * 100.0) / 100.0 },
+    longitud = longitud?.let { Math.round(it * 100.0) / 100.0 },
+    cuidadorUsername = cuidadorUsername,
+    cuidadorFoto = cuidadorFoto
 )
 
 fun Animal.toAnimalDetalleResponse(
     fotos: List<String>,
     vacunas: List<String>,
     padecimientos: List<String>,
-    numInteresados: Int = 0
+    numInteresados: Int = 0,
+    cuidadorUsername: String? = null,
+    cuidadorFoto: String? = null
 ) = AnimalDetalleResponse(
     id = this.id ?: "",
     nombre = this.nombre,
@@ -88,5 +96,7 @@ fun Animal.toAnimalDetalleResponse(
     fotos = fotos,
     vacunas = vacunas,
     padecimientos = padecimientos,
-    numInteresados = numInteresados
+    numInteresados = numInteresados,
+    cuidadorUsername = cuidadorUsername,
+    cuidadorFoto = cuidadorFoto
 )

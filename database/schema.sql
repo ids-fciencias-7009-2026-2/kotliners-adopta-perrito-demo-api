@@ -44,6 +44,13 @@ CREATE TABLE usuario (
     token            TEXT,
     codigo_postal    VARCHAR(5)    NOT NULL,
     rol              rol_enum      NOT NULL,
+    codigo_2fa       VARCHAR(6),
+    codigo_2fa_expira TIMESTAMP,
+    intentos_fallidos INT          DEFAULT 0,
+    bloqueado_hasta   TIMESTAMP,
+    verificado        BOOLEAN      DEFAULT FALSE,
+    token_verificacion TEXT,
+    token_recuperacion TEXT,
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_update     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_eliminado  TIMESTAMP,
@@ -97,7 +104,6 @@ CREATE TABLE animal (
     estatus         estatus_enum  NOT NULL,
     usuario_id      UUID          NOT NULL,
     fecha_registro  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    inapropiado     BOOLEAN       DEFAULT FALSE,
     esterilizado    BOOLEAN       DEFAULT FALSE,
     updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id) ON DELETE CASCADE
@@ -164,6 +170,28 @@ CREATE TABLE usuario_interes (
 );
 
 CREATE INDEX idx_usuario_interes_usuario_id ON usuario_interes(usuario_id);
+
+-- =========================
+-- REPORTE
+-- =========================
+CREATE TYPE reporte_estado_enum AS ENUM ('PENDIENTE', 'RESUELTO', 'DESESTIMADO');
+
+DROP TABLE IF EXISTS reporte CASCADE;
+
+CREATE TABLE reporte (
+    reporte_id       UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id       UUID                 NOT NULL,
+    animal_id        UUID                 NOT NULL,
+    motivo           TEXT                 NOT NULL,
+    estado           reporte_estado_enum  NOT NULL DEFAULT 'PENDIENTE',
+    fecha            TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    fecha_resolucion TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id) ON DELETE CASCADE,
+    FOREIGN KEY (animal_id)  REFERENCES animal(animal_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_reporte_estado ON reporte(estado);
+CREATE INDEX idx_reporte_animal ON reporte(animal_id);
 
 -- =========================
 -- TRIGGER: Solo cuidadores pueden publicar animales
@@ -931,3 +959,22 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Toyger', 'Jugu
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Turkish Angora', 'Angora Turco') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Turkish Van', 'Furgoneta Turca') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'York Chocolate', 'Chocolate York') ON CONFLICT (especie, nombre_en) DO NOTHING;
+
+-- =========================
+-- SEED: Usuario Administrador
+-- Password: Admin123! (hash BCrypt)
+-- =========================
+INSERT INTO usuario (curp, username, foto_perfil, email, nombres, apellido_paterno, apellido_materno, password, codigo_postal, rol, verificado)
+VALUES (
+    'ADMIN00000000000A',
+    'admin',
+    NULL,
+    'admin@colitas.mx',
+    'Administrador',
+    'Sistema',
+    'Colitas',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '00000',
+    'ADMINISTRADOR',
+    TRUE
+) ON CONFLICT (email) DO NOTHING;

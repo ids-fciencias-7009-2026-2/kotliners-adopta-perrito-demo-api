@@ -17,6 +17,7 @@ import com.kotliners.adoptaPerrito.dto.response.PadecimientoResponse
 import com.kotliners.adoptaPerrito.adapters.CloudinaryAdapter
 
 import com.kotliners.adoptaPerrito.services.AnimalService
+import com.kotliners.adoptaPerrito.services.ReporteService
 import com.kotliners.adoptaPerrito.services.UsuarioService
 import com.kotliners.adoptaPerrito.utils.TokenExtractor
 
@@ -59,6 +60,9 @@ class AnimalController {
 
     @Autowired
     lateinit var cloudinaryAdapter: CloudinaryAdapter
+
+    @Autowired
+    lateinit var reporteService: ReporteService
 
     /**
      * Crear un nuevo animal
@@ -222,7 +226,8 @@ class AnimalController {
                 return ResponseEntity.ok(animals.map { animal ->
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
                     val coords = animalService.getCoordsForAnimal(animal)
-                    animal.toAnimalResponse(foto, 0, coords?.first, coords?.second)
+                    val cuidador = animalService.getCuidadorInfo(animal.usuarioId)
+                    animal.toAnimalResponse(foto, 0, coords?.first, coords?.second, cuidador?.first, cuidador?.second)
                 })
             }
         } catch (e: IllegalArgumentException) {
@@ -419,40 +424,29 @@ class AnimalController {
     }
 
     /**
-     * Marca un animal como inapropiado para adopción.
+     * Reporta un animal como inapropiado, creando un reporte con motivo.
      * URL: PATCH /api/animales/{id}/inapropiado
      * Header: Authorization: Bearer <token>
-      * 
-      * @return ResponseEntity con el resultado de la operación:
-     *      - 200 OK si se marcó como inapropiado
-     *      - 401 Unauthorized si el token es inválido o no se proporciona
-     *      - 403 Forbidden si el usuario no tiene permisos para marcar el animal
-     *      - 404 Not Found si no existe el animal
+     * Body: { "motivo": "texto" }
      */
     @PatchMapping("/{id}/inapropiado")
     fun marcarAnimalInapropiado(
         @RequestHeader("Authorization", required = true) token: String?,
-        @PathVariable id: String
+        @PathVariable id: String,
+        @RequestBody(required = false) body: Map<String, String>?
     ): ResponseEntity<Any> {
-        logger.info("Solicitud para marcar animal como inapropiado: $id")
         val userFound = TokenExtractor.resolveUser(token, userService)
             ?: return ResponseEntity.status(401).body("Token inválido")
+        val motivo = body?.get("motivo") ?: "Contenido inapropiado"
         return try {
-            val updated = animalService.marcarAnimalInapropiado(
-                id,
-                userFound.id!!,
-                userFound.rol
+            val reporte = reporteService.crearReporte(
+                java.util.UUID.fromString(userFound.id!!),
+                java.util.UUID.fromString(id),
+                motivo
             )
-            if (updated) {
-                logger.info("Animal marcado como inapropiado: $id")
-                ResponseEntity.ok("Animal marcado como inapropiado")
-            } else {
-                logger.warn("Intento de marcar animal como inapropiado no encontrado: $id")
-                ResponseEntity.status(404).body("Animal no encontrado")
-            }
+            ResponseEntity.status(201).body(reporte)
         } catch (e: IllegalArgumentException) {
-            logger.warn("Intento de marcar animal como inapropiado sin permisos: $id")
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            ResponseEntity.badRequest().body(e.message ?: "Error al reportar")
         }
     }
 }

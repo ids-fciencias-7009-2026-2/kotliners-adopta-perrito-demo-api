@@ -67,6 +67,9 @@ class AnimalService {
     @Autowired
     lateinit var usuarioRepository: com.kotliners.adoptaPerrito.repositories.UsuarioRepository
 
+    @Autowired
+    lateinit var accionService: AccionService
+
     /** 
      * Crea un nuevo animal y lo persiste en la base de datos
      * 
@@ -81,6 +84,7 @@ class AnimalService {
         }
         val entity = animal.toAnimalEntity()
         val saved = animalRepository.save(entity)
+        accionService.registrar(saved.usuarioId, "REGISTRO_ANIMAL")
         logger.info("Animal creado con ID: ${saved.id}")
         return saved.toAnimal()
     }
@@ -117,7 +121,7 @@ class AnimalService {
         ordenDesc: Boolean = true
     ): List<Animal> {
         logger.info("Buscando animales con filtros: especie=$especie, sexo=$sexo, edad=$edadMinAnios-$edadMaxAnios, distanciaKm=$distanciaKm")
-        if (requesterRole != Rol.ADOPTANTE) {
+        if (requesterRole != Rol.ADOPTANTE && requesterRole != Rol.ADMINISTRADOR) {
             throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden buscar animales")
         }
 
@@ -231,7 +235,7 @@ class AnimalService {
      */
     fun searchAllAnimals(requesterRole: Rol): List<Animal> {
         logger.info("Listando todos los animales para rol: $requesterRole")
-        if (requesterRole != Rol.ADOPTANTE) {
+        if (requesterRole != Rol.ADOPTANTE && requesterRole != Rol.ADMINISTRADOR) {
             logger.warn("Intento de listar animales por usuario sin rol ADOPTANTE: $requesterRole")
             throw IllegalArgumentException("Solo usuarios con rol ADOPTANTE pueden listar todos los animales")
         }
@@ -317,7 +321,6 @@ class AnimalService {
         entity.sexo = updates.sexo
         entity.descripcion = updates.descripcion
         entity.estatus = updates.estatus
-        entity.inapropiado = updates.inapropiado
         entity.esterilizado = updates.esterilizado
         entity.updatedAt = LocalDateTime.now()
 
@@ -374,7 +377,8 @@ class AnimalService {
         val padecimientoIds = animalPadecimientoRepository.findByAnimalId(uuid).map { it.padecimientoId }
         val padecimientos = padecimientoIds.mapNotNull { padecimientoRepository.findById(it).orElse(null)?.nombre }
 
-        return animal.toAnimalDetalleResponse(fotos, vacunas, padecimientos, getNumInteresados(id))
+        val cuidador = getCuidadorInfo(animal.usuarioId)
+        return animal.toAnimalDetalleResponse(fotos, vacunas, padecimientos, getNumInteresados(id), cuidador?.first, cuidador?.second)
     }
 
     /**
@@ -394,6 +398,16 @@ class AnimalService {
             .orElse(null)?.codigoPostal ?: return null
         val cp = codigoPostalRepository.findById(cpCuidador).orElse(null) ?: return null
         return Pair(cp.latitud.toDouble(), cp.longitud.toDouble())
+    }
+
+    /**
+     * Obtiene username y foto de perfil del cuidador.
+     * @return Pair(username, fotoPerfil) o null si no existe.
+     */
+    fun getCuidadorInfo(usuarioId: String): Pair<String, String?>? {
+        val uuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) { return null }
+        val entity = usuarioRepository.findById(uuid).orElse(null) ?: return null
+        return Pair(entity.username, entity.fotoPerfil)
     }
 
     /**
@@ -496,39 +510,6 @@ class AnimalService {
             return emptyList()
         }
         return animalRepository.findAllByUsuarioId(uuid).map { it.toAnimal() }
-    }
-
-    /**
-     * Marca un animal como inapropiado para adopción. 
-     * @param id ID del animal a marcar.
-     * @param usuarioId ID del usuario que hace la solicitud.
-     * @param usuarioRol Rol del usuario que hace la solicitud (debe ser ADOPTANTE).
-     * @return true si el animal fue marcado como inapropiado, false si no se encontró el animal o el ID no es válido.
-     * @throws IllegalArgumentException si el usuario no tiene rol ADOPTANTE.
-     */
-    fun marcarAnimalInapropiado(
-        id: String, 
-        usuarioId: String, 
-        usuarioRol: Rol
-    ): Boolean {
-        logger.info("Marcando animal como inapropiado por ID: $id")
-        val uuid = try { UUID.fromString(id) } catch (e: IllegalArgumentException) {
-            logger.warn("ID de animal no es un UUID valido: $id")
-            return false
-        }
-        val entity = animalRepository.findById(uuid).orElse(null)
-        if (entity == null) {
-            logger.warn("No se encontró el animal con ID: $id")
-            return false
-        }
-        if (usuarioRol != Rol.ADOPTANTE) {
-            logger.warn("Usuario $usuarioId sin rol ADOPTANTE intentó marcar animal como inapropiado: $id")
-            throw IllegalArgumentException("Solo adoptantes pueden marcar animales como inapropiados")
-        }
-        entity.inapropiado = true
-        animalRepository.save(entity)
-        logger.info("Animal marcado como inapropiado con éxito: $id")
-        return true
     }
 
     /**

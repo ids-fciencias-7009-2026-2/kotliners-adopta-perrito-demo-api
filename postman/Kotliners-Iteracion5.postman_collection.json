@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "Kotliners - Iteracion 5",
+    "description": "Endpoints nuevos de la iteración 5: 2FA, reportes, admin, logs, recuperación de contraseña",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "email", "value": "julietanilem@gmail.com" },
+    { "key": "adminEmail", "value": "julifm@amazon.com" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth - 2FA y Seguridad",
+      "item": [
+        {
+          "name": "Login (envia codigo 2FA)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"password\": \"Admin123!\"}" }
+          }
+        },
+        {
+          "name": "Verificar 2FA (obtener token)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/verificar-2fa" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"codigo\": \"XXXXXX\"}" }
+          }
+        },
+        {
+          "name": "Login con cuenta bloqueada (5 intentos fallidos)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"password\": \"wrongpassword\"}" }
+          }
+        },
+        {
+          "name": "Login con correo no verificado",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"noverificado@test.com\", \"password\": \"Admin123!\"}" }
+          }
+        },
+        {
+          "name": "Registro con password débil (rechazado)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nombres\": \"Test\", \"apellidoPaterno\": \"User\", \"apellidoMaterno\": \"X\", \"username\": \"weakpwd\", \"email\": \"weak@test.com\", \"codigoPostal\": \"00000\", \"curp\": \"WEEE000101HDFRRL01\", \"rol\": \"ADOPTANTE\", \"password\": \"1234\"}" }
+          }
+        },
+        {
+          "name": "Verificar correo (activar cuenta)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/usuarios/verificar-correo?token=TOKEN_AQUI" }
+          }
+        },
+        {
+          "name": "Solicitar recuperacion de contraseña",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/recuperar" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\"}" }
+          }
+        },
+        {
+          "name": "Restablecer contraseña",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/restablecer" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"token\": \"TOKEN_RECUPERACION\", \"password\": \"NuevaPass123!\"}" }
+          }
+        },
+        {
+          "name": "Registro ADMINISTRADOR (rechazado)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nombres\": \"Hacker\", \"apellidoPaterno\": \"X\", \"apellidoMaterno\": \"X\", \"username\": \"hacker\", \"email\": \"hack@test.com\", \"codigoPostal\": \"00000\", \"curp\": \"HACK000101HDFRRL01\", \"rol\": \"ADMINISTRADOR\", \"password\": \"Admin123!\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes y Admin",
+      "item": [
+        {
+          "name": "Crear reporte (adoptante reporta animal)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reportes" },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"animalId\": \"ID_ANIMAL\", \"motivo\": \"Publicacion con informacion falsa\"}" }
+          }
+        },
+        {
+          "name": "Verificar si ya reporte un animal",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reportes/check/ID_ANIMAL" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Retirar mi reporte",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_ANIMAL" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Listar reportes pendientes (admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+          }
+        },
+        {
+          "name": "Resolver reporte (admin elimina publicacion)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/resolver" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+          }
+        },
+        {
+          "name": "Desestimar reporte (admin mantiene publicacion)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/desestimar" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+          }
+        },
+        {
+          "name": "Reportar via PATCH (con motivo)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/animales/ID_ANIMAL/inapropiado" },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"motivo\": \"Contenido sospechoso\"}" }
+          }
+        },
+        {
+          "name": "Listar interesados en un animal (cuidador)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/animales/ID_ANIMAL/interesados" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accesos denegados",
+      "item": [
+        {
+          "name": "Reportes pendientes (sin ser admin - 403)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Resolver reporte (sin ser admin - 403)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/resolver" },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

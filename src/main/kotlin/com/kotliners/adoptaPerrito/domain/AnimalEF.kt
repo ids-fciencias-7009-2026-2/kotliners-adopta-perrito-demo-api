@@ -18,7 +18,6 @@ fun AnimalEntity.toAnimal(): Animal {
 		estatus = this.estatus,
 		usuarioId = this.usuarioId?.toString() ?: "",
 		fechaRegistro = this.fechaRegistro,
-		inapropiado = this.inapropiado,
 		esterilizado = this.esterilizado,
 		updatedAt = this.updatedAt
 	)

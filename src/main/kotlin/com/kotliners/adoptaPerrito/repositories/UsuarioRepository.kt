@@ -68,20 +68,6 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
     fun findByCurp(curp:String):UsuarioEntity?
 
     /**
-     * Busca un usuario por su correo electrónico y contraseña hasheada.
-     *
-     * Esta es la consulta principal utilizada durante el proceso de login.
-     * Combina email (identificador único) con contraseña hasheada para
-     * autenticación segura.
-     *
-     * @param email El correo electrónico del usuario
-     * @param password La contraseña hasheada con SHA-256
-     * @return UsuarioEntity si las credenciales coinciden, <code>null</code> en caso contrario
-     */
-    @Query("select u from UsuarioEntity u where u.email = :email and u.password = :password")
-    fun findUserByPasswordAndEmail(email:String,password:String):UsuarioEntity?   
-    
-    /**
      * Actualiza el token de sesión de un usuario específico.
      *
      * Esta operación se utiliza durante el logout para invalidar la sesión
@@ -110,4 +96,15 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
     @Transactional
     @Query("update UsuarioEntity u set u.fechaEliminado = :fecha, u.token = null where u.id = :id")
     fun softDeleteById(id: UUID, fecha: java.time.LocalDateTime)
+
+    @Query("select u from UsuarioEntity u where u.tokenVerificacion = :token")
+    fun findByTokenVerificacion(token: String): UsuarioEntity?
+
+    @Query("select u from UsuarioEntity u where u.tokenRecuperacion = :token")
+    fun findByTokenRecuperacion(token: String): UsuarioEntity?
+
+    @Modifying
+    @Transactional
+    @Query("delete from UsuarioEntity u where u.verificado = false and u.fechaRegistro < :limite")
+    fun deleteUnverifiedBefore(limite: java.time.LocalDateTime): Int
 }
