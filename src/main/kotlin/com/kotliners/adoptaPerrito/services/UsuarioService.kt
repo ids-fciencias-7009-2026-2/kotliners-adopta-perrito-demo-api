@@ -349,6 +349,7 @@ class UsuarioService {
         if (request.fotoPerfil != null) entity.fotoPerfil = request.fotoPerfil
         entity.fechaUpdate = LocalDateTime.now()
         val saved = usuarioRepository.save(entity)
+        accionService.registrar(saved.id, "ACTUALIZACION_PERFIL")
         logger.info("Usuario actualizado: ${saved.id}")
         return saved.toUsuario()
     }
