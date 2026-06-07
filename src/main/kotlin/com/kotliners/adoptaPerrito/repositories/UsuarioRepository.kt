@@ -102,4 +102,9 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
 
     @Query("select u from UsuarioEntity u where u.tokenRecuperacion = :token")
     fun findByTokenRecuperacion(token: String): UsuarioEntity?
+
+    @Modifying
+    @Transactional
+    @Query("delete from UsuarioEntity u where u.verificado = false and u.fechaRegistro < :limite")
+    fun deleteUnverifiedBefore(limite: java.time.LocalDateTime): Int
 }
