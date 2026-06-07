@@ -179,16 +179,8 @@ class UsuarioService {
         usuarioRepository.save(entity)
 
         val enlace = "http://localhost:3000/recuperar?token=$token"
-        val html = """
-            <html><body>
-            <p>Hola <strong>${entity.nombres}</strong>,</p>
-            <p>Recibimos una solicitud para restablecer tu contraseña en <strong>Colitas Felices</strong>.</p>
-            <p><a href="$enlace" style="background:#65c3c8;color:white;padding:10px 20px;border-radius:8px;text-decoration:none">Restablecer contraseña</a></p>
-            <p>Si no solicitaste esto, ignora este correo.</p>
-            <br><p>Saludos,<br>Colitas Felices</p>
-            </body></html>
-        """.trimIndent()
-        mailAdapter.sendHtmlEmail(entity.email, "Restablecer contraseña – Colitas Felices", html)
+        val (subjectRecup, bodyRecup) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.recuperarContrasena(entity.nombres, enlace)
+        mailAdapter.sendHtmlEmail(entity.email, subjectRecup, bodyRecup)
         logger.info("Correo de recuperacion enviado a: $email")
     }
 
@@ -248,15 +240,8 @@ class UsuarioService {
         usuarioEntity.codigo2faExpira = LocalDateTime.now().plusMinutes(10)
         usuarioRepository.save(usuarioEntity)
 
-        val html = """
-            <html><body>
-            <p>Hola <strong>${usuarioEntity.nombres}</strong>,</p>
-            <p>Tu código de verificación es:</p>
-            <h2 style="letter-spacing:8px;text-align:center">${codigo}</h2>
-            <p>Este código expira en 10 minutos.</p>
-            </body></html>
-        """.trimIndent()
-        mailAdapter.sendHtmlEmail(usuarioEntity.email, "Código de verificación – Colitas Felices", html)
+        val (subject2fa, body2fa) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.codigo2fa(usuarioEntity.nombres, codigo)
+        mailAdapter.sendHtmlEmail(usuarioEntity.email, subject2fa, body2fa)
         logger.info("Codigo 2FA enviado a: $email")
 
         val usuario = usuarioEntity.toUsuario()
@@ -287,14 +272,8 @@ class UsuarioService {
         val saved = usuarioRepository.save(entity)
 
         // Notificación de ingreso exitoso
-        val html = """
-            <html><body>
-            <p>Hola <strong>${saved.nombres}</strong>,</p>
-            <p>Se ha detectado un nuevo inicio de sesión en tu cuenta de <strong>Colitas Felices</strong>.</p>
-            <p>Si no reconoces esta actividad, contacta a soporte de inmediato.</p>
-            </body></html>
-        """.trimIndent()
-        mailAdapter.sendHtmlEmail(saved.email, "Nuevo inicio de sesión en Colitas Felices", html)
+        val (subjectLogin, bodyLogin) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.loginExitoso(saved.nombres)
+        mailAdapter.sendHtmlEmail(saved.email, subjectLogin, bodyLogin)
         accionService.registrar(saved.id, "LOGIN")
         return saved.toUsuario()
     }
@@ -392,18 +371,11 @@ class UsuarioService {
         usuarioRepository.softDeleteById(uuid, java.time.LocalDateTime.now())
         accionService.registrar(uuid, "ELIMINACION_CUENTA")
         logger.info("Cuenta eliminada logicamente para usuario ID: $userId")
-        val cuerpoEliminacion = """
-        <html><body>
-        <p>Hola <strong>${entity.nombres}</strong>,</p>
-        <p>Tu cuenta en <strong>Colitas Felices</strong> ha sido eliminada exitosamente.</p>
-        <p>Si no solicitaste esta accion, contacta a soporte de inmediato.</p>
-        <br><p>Saludos,<br>Colitas Felices</p>
-        </body></html>
-    """.trimIndent()
+        val (subjectElim, bodyElim) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.cuentaEliminada(entity.nombres)
         val resultado = mailAdapter.sendHtmlEmail(
             to = entity.email,
-            subject = "Tu cuenta en Colitas Felices ha sido eliminada",
-            htmlBody = cuerpoEliminacion
+            subject = subjectElim,
+            htmlBody = bodyElim
         )
         if (resultado.isFailure) {
             logger.warn("No se pudo enviar correo de eliminacion a: ${entity.email}")
