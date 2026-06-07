@@ -41,8 +41,6 @@ data class Animal(
 	/** Fecha de registro del animal */
 	var fechaRegistro: LocalDateTime = LocalDateTime.now(),
 
-	/** Indica si el animal fue marcado como inapropiado */
-	var inapropiado: Boolean = false,
 
 	/** Indica si el animal está esterilizado */
 	var esterilizado: Boolean = false,

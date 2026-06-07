@@ -69,10 +69,6 @@ data class AnimalEntity(
 	@Column(name = "fecha_registro")
 	var fechaRegistro: LocalDateTime = LocalDateTime.now(),
 
-	/** Indica si el animal fue marcado como inapropiado */
-	@Column(name = "inapropiado")
-	var inapropiado: Boolean = false,
-
 	/** Indica si el animal está esterilizado */
 	@Column(name = "esterilizado")
 	var esterilizado: Boolean = false,

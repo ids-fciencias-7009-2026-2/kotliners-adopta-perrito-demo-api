@@ -29,7 +29,6 @@ interface AnimalRepository : JpaRepository<AnimalEntity, UUID> {
         LEFT JOIN animal_vacuna av ON av.animal_id = a.animal_id
         LEFT JOIN vacuna v ON v.vacuna_id = av.vacuna_id
         WHERE a.estatus = 'DISPONIBLE'
-          AND a.inapropiado = false
           AND (CAST(:especie AS VARCHAR) IS NULL OR UPPER(a.especie) = UPPER(CAST(:especie AS VARCHAR)))
           AND (CAST(:sexo AS VARCHAR) IS NULL OR a.sexo::text = CAST(:sexo AS VARCHAR))
           AND (:esterilizado IS NULL OR a.esterilizado = :esterilizado)
