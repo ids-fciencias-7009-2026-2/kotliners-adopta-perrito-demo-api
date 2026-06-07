@@ -11,7 +11,8 @@ import com.kotliners.adoptaPerrito.dto.response.UsuarioResponse
 import com.kotliners.adoptaPerrito.dto.response.toUsuarioResponse
 import com.kotliners.adoptaPerrito.services.UsuarioService
 import com.kotliners.adoptaPerrito.utils.TokenExtractor
-import com.kotliners.adoptaPerrito.utils.PasswordUtil      
+import com.kotliners.adoptaPerrito.utils.PasswordUtil
+import com.kotliners.adoptaPerrito.utils.PasswordValidator      
 
 import jakarta.validation.Valid
 
@@ -102,14 +103,8 @@ class UsuarioController {
     ): ResponseEntity<Any> {
         logger.info("Solicitud de registro recibida para: ${createUsuarioRequest.email}")
 
-        // Validar complejidad de contraseña
-        val pwd = createUsuarioRequest.password
-        val passwordErrors = mutableListOf<String>()
-        if (pwd.length < 8) passwordErrors.add("mínimo 8 caracteres")
-        if (!pwd.any { it.isUpperCase() }) passwordErrors.add("al menos una mayúscula")
-        if (!pwd.any { it.isLowerCase() }) passwordErrors.add("al menos una minúscula")
-        if (!pwd.any { it.isDigit() }) passwordErrors.add("al menos un número")
-        if (!pwd.any { !it.isLetterOrDigit() }) passwordErrors.add("al menos un carácter especial")
+        // Validar complejidad de contraseña (patron Strategy)
+        val passwordErrors = PasswordValidator.validate(createUsuarioRequest.password)
         if (passwordErrors.isNotEmpty()) {
             return ResponseEntity.badRequest().body(
                 mapOf("error" to "La contraseña debe contener: ${passwordErrors.joinToString(", ")}")

@@ -127,12 +127,11 @@ class ReporteService(
     }
 
     private fun enviarCorreoEliminacion(email: String, nombreAnimal: String, motivo: String) {
-        val html = """
-            <h2>Tu publicación ha sido eliminada</h2>
-            <p>La publicación de <strong>$nombreAnimal</strong> fue eliminada por un administrador.</p>
-            <p><strong>Motivo:</strong> $motivo</p>
-            <p>Si consideras que fue un error, contacta al equipo de soporte.</p>
-        """.trimIndent()
-        mailAdapter.sendHtmlEmail(email, "Publicación eliminada – Colitas Felices", html)
+        val (subject, body) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.publicacionEliminada(
+            nombre = email.substringBefore("@"),
+            animalNombre = nombreAnimal,
+            motivo = motivo
+        )
+        mailAdapter.sendHtmlEmail(email, subject, body)
     }
 }
