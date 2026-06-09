@@ -64,7 +64,7 @@ psql -U tu_usuario -d colitas_db -f database/schema.sql
 ```
 
 El schema crea un usuario administrador por defecto:
-- Email: `admin@colitas.mx` | Password: `Admin123!` (hash BCrypt)
+- Email: `colitasfeliceskotliners@gmail.com` | Password: `Admin123!` (hash BCrypt)
 
 ## Ejecución
 
@@ -102,6 +102,7 @@ La API estará disponible en `http://localhost:8080`.
 | POST | `/api/animales/{id}/interes` | Manifestar interés (adoptante) |
 | DELETE | `/api/animales/{id}/interes` | Retirar interés (adoptante) |
 | GET | `/api/usuarios/me/intereses` | Favoritos del adoptante |
+| GET | `/api/animales/me/intereses` | Intereses recibidos (cuidador) |
 | **Reportes (admin)** | | |
 | POST | `/api/reportes` | Crear reporte con motivo |
 | GET | `/api/reportes/check/{animalId}` | Verificar si ya reporté un animal |
@@ -113,6 +114,13 @@ La API estará disponible en `http://localhost:8080`.
 | **Razas** | | |
 | GET | `/api/razas` | Catálogo de razas (`?especie=PERRO\|GATO`) |
 | GET | `/api/razas/info` | Info de raza desde API externa |
+| **Vacunas y Padecimientos** | | |
+| GET | `/api/vacunas` | Listar vacunas disponibles |
+| POST | `/api/vacunas` | Crear vacuna (cuidador) |
+| GET | `/api/padecimientos` | Listar padecimientos disponibles |
+| POST | `/api/padecimientos` | Crear padecimiento (cuidador) |
+| PUT | `/api/animales/{id}/vacunas` | Actualizar vacunas de un animal |
+| PUT | `/api/animales/{id}/padecimientos` | Actualizar padecimientos de un animal |
 | **Imágenes** | | |
 | POST | `/uploads/foto-perfil` | Subir foto de perfil |
 | POST | `/api/animales/{id}/fotos` | Subir foto de animal |
@@ -126,6 +134,6 @@ La API estará disponible en `http://localhost:8080`.
 
 Incluye tests unitarios para `AnimalService`, `MailAdapter` e `InteresService`.
 
-## Colecciones Postman
+## Colección Postman
 
-En la carpeta `postman/` hay colecciones por iteración para probar los endpoints.
+En `postman/Kotliners-Iteracion5.postman_collection.json` está la colección completa con todos los endpoints del sistema. Importar en Postman y configurar las variables `token`, `token_cuidador` y `adminToken` tras autenticarse.
