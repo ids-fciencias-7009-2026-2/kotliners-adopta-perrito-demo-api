@@ -23,4 +23,13 @@ class CleanupService(private val usuarioRepository: UsuarioRepository) {
             logger.info("Limpieza: $eliminados cuentas no verificadas eliminadas (registro > 24h)")
         }
     }
+
+    @Scheduled(fixedRate = 3600000)
+    fun limpiarCambiosDeCorreoExpirados() {
+        val limite = LocalDateTime.now().minusHours(24)
+        val limpiados = usuarioRepository.clearExpiredEmailPendiente(limite)
+        if (limpiados > 0) {
+            logger.info("Limpieza: $limpiados cambios de correo expirados descartados")
+        }
+    }
 }

@@ -107,4 +107,9 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
     @Transactional
     @Query("delete from UsuarioEntity u where u.verificado = false and u.fechaRegistro < :limite")
     fun deleteUnverifiedBefore(limite: java.time.LocalDateTime): Int
+
+    @Modifying
+    @Transactional
+    @Query("update UsuarioEntity u set u.emailPendiente = null, u.tokenVerificacion = null where u.emailPendiente is not null and u.fechaUpdate < :limite")
+    fun clearExpiredEmailPendiente(limite: java.time.LocalDateTime): Int
 }
