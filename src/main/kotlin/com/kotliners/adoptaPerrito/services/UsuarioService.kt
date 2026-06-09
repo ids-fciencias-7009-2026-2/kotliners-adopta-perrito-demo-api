@@ -412,6 +412,7 @@ class UsuarioService {
             throw IllegalArgumentException("La cuenta ya fue eliminada.")
         }
         usuarioRepository.softDeleteById(uuid, java.time.LocalDateTime.now())
+        usuarioRepository.updateTokenById(uuid, null)
         accionService.registrar(uuid, "ELIMINACION_CUENTA")
         logger.info("Cuenta eliminada logicamente para usuario ID: $userId")
         val (subjectElim, bodyElim) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.cuentaEliminada(entity.nombres)
