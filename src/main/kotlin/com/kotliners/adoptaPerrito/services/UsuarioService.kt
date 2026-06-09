@@ -355,7 +355,7 @@ class UsuarioService {
         val existingWithEmail = usuarioRepository.findByEmail(request.email)
         if (existingWithEmail != null && existingWithEmail.id != uuid) {
             logger.warn("Email ya registrado por otro usuario: ${request.email}")
-            throw IllegalArgumentException("El correo electronico ya esta en uso por otro usuario.")
+            throw IllegalArgumentException("Algunos datos ya estan en uso. Verifica la información e intenta de nuevo.")
         }
 
         entity.nombres = request.nombres
