@@ -69,10 +69,10 @@ El schema crea un usuario administrador por defecto:
 ## Ejecución
 
 ```bash
-set -a && source .env && set +a && ./mvnw spring-boot:run
+./mvnw spring-boot:run
 ```
 
-La API estará disponible en `http://localhost:8080`.
+La API estará disponible en `http://localhost:8080`. Las variables del `.env` se cargan automáticamente con `dotenv-kotlin`.
 
 ## Endpoints principales
 
