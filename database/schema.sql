@@ -33,10 +33,10 @@ DROP TABLE IF EXISTS usuario CASCADE;
 
 CREATE TABLE usuario (
     usuario_id       UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    curp             VARCHAR(18)   NOT NULL UNIQUE,
-    username         VARCHAR(50)   NOT NULL UNIQUE,
+    curp             VARCHAR(18)   NOT NULL,
+    username         VARCHAR(50)   NOT NULL,
     foto_perfil      TEXT,
-    email            VARCHAR(100)  NOT NULL UNIQUE,
+    email            VARCHAR(100)  NOT NULL,
     nombres          VARCHAR(100)  NOT NULL,
     apellido_paterno VARCHAR(100)  NOT NULL,
     apellido_materno VARCHAR(100)  NOT NULL,
@@ -57,6 +57,11 @@ CREATE TABLE usuario (
     fecha_eliminado  TIMESTAMP,
     FOREIGN KEY (codigo_postal) REFERENCES codigo_postal(codigo_postal)
 );
+
+-- UNIQUE parcial: solo aplica a cuentas activas (fecha_eliminado IS NULL)
+CREATE UNIQUE INDEX idx_usuario_curp_active ON usuario(curp) WHERE fecha_eliminado IS NULL;
+CREATE UNIQUE INDEX idx_usuario_username_active ON usuario(username) WHERE fecha_eliminado IS NULL;
+CREATE UNIQUE INDEX idx_usuario_email_active ON usuario(email) WHERE fecha_eliminado IS NULL;
 
 CREATE INDEX idx_usuario_cp ON usuario(codigo_postal);
 

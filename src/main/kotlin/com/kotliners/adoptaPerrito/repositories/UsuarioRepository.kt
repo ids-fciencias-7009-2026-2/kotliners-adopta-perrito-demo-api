@@ -46,7 +46,7 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
      * @param email El correo electrónico del usuario (debe ser único)
      * @return UsuarioEntity si existe un usuario con ese email, null en caso contrario
      */
-    @Query("select u from UsuarioEntity u where u.email = :email")
+    @Query("select u from UsuarioEntity u where u.email = :email and u.fechaEliminado is null")
     fun findByEmail(email:String):UsuarioEntity?
 
     /**
@@ -55,7 +55,7 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
      * @param username El nombre de usuario del usuario.
      * @return UsuarioEntity si existe, <code>null</code> en caso contrario.
      */
-    @Query("select u from UsuarioEntity u where u.username = :username")
+    @Query("select u from UsuarioEntity u where u.username = :username and u.fechaEliminado is null")
     fun findByUsername(username:String):UsuarioEntity?
 
     /**
@@ -64,7 +64,7 @@ interface UsuarioRepository:CrudRepository<UsuarioEntity,UUID> {
      * @param curp La CURP del usuario.
      * @return UsuarioEntity si existe, <code>null</code> en caso contrario.
      */
-    @Query("select u from UsuarioEntity u where u.curp = :curp")
+    @Query("select u from UsuarioEntity u where u.curp = :curp and u.fechaEliminado is null")
     fun findByCurp(curp:String):UsuarioEntity?
 
     /**

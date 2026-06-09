@@ -28,11 +28,11 @@ data class UsuarioEntity(
     val id: UUID? = null,
 
     /** Clave Única de Registro de Población */
-    @Column(name = "curp", unique = true, nullable = false, length = 18)
+    @Column(name = "curp", nullable = false, length = 18)
     var curp: String = "",
 
     /** Nombre de usuario único en el sistema */
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(name = "username", nullable = false)
     var username: String = "",
 
     /** Rol del usuario: ADOPTANTE o CUIDADOR */
@@ -58,7 +58,7 @@ data class UsuarioEntity(
     var apellidoMaterno: String = "",
 
     /** Correo electrónico único del usuario */
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(name = "email", nullable = false)
     var email: String = "",
 
     /** Código postal del usuario */
