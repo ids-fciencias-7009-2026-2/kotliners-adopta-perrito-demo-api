@@ -967,15 +967,15 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'York Chocolate
 -- =========================
 INSERT INTO usuario (curp, username, foto_perfil, email, nombres, apellido_paterno, apellido_materno, password, codigo_postal, rol, verificado)
 VALUES (
-    'ADMIN00000000000A',
-    'admin',
-    NULL,
-    'admin@colitas.mx',
-    'Administrador',
-    'Sistema',
-    'Colitas',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-    '00000',
-    'ADMINISTRADOR',
-    TRUE
+  'ADMIN00000000000A',
+  'admin',
+  NULL,
+  'colitasfeliceskotliners@gmail.com',
+  'Administrador',
+  'Sistema',
+  'Colitas',
+  '$2b$10$JiaurFlffKk1udLFV3RkTeYpLwskkTTKqx7gWWMuyVFEYikSU3ZN.',
+  '00000',
+  'ADMINISTRADOR',
+  TRUE
 ) ON CONFLICT (email) DO NOTHING;
