@@ -8,7 +8,9 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.EnumType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UuidGenerator
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -35,7 +37,8 @@ data class UsuarioEntity(
 
     /** Rol del usuario: ADOPTANTE o CUIDADOR */
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "rol", nullable = false, columnDefinition = "rol_enum")
     var rol: Rol = Rol.ADOPTANTE,
 
     /** URL de la foto de perfil (opcional) */

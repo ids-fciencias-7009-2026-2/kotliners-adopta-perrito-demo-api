@@ -1,63 +1,97 @@
 {
   "info": {
-    "name": "Kotliners - Iteracion 5",
-    "description": "Endpoints nuevos de la iteración 5: 2FA, reportes, admin, logs, recuperación de contraseña",
+    "name": "Kotliners - Iteracion 5 (Completa)",
+    "description": "Colección completa con TODOS los endpoints del sistema Colitas Felices",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
     { "key": "token", "value": "" },
-    { "key": "email", "value": "julietanilem@gmail.com" },
-    { "key": "adminEmail", "value": "julifm@amazon.com" },
-    { "key": "adminToken", "value": "" }
+    { "key": "token_cuidador", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "email", "value": "test@test.com" },
+    { "key": "adminEmail", "value": "colitasfeliceskotliners@gmail.com" },
+    { "key": "animalId", "value": "" }
   ],
   "item": [
     {
-      "name": "Auth - 2FA y Seguridad",
+      "name": "Usuarios - Registro",
       "item": [
         {
-          "name": "Login (envia codigo 2FA)",
+          "name": "Registrar usuario (Adoptante)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/login" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"password\": \"Admin123!\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "body": { "mode": "raw", "raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"adoptante1\",\n  \"rol\": \"ADOPTANTE\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"password\": \"Admin123!\"\n}" }
           }
         },
         {
-          "name": "Verificar 2FA (obtener token)",
+          "name": "Registrar usuario (Cuidador)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/verificar-2fa" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"codigo\": \"XXXXXX\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "body": { "mode": "raw", "raw": "{\n  \"curp\": \"XBXX010101HNEXXXA2\",\n  \"username\": \"cuidador1\",\n  \"rol\": \"CUIDADOR\",\n  \"nombres\": \"Maria\",\n  \"apellidoPaterno\": \"Lopez\",\n  \"apellidoMaterno\": \"Garcia\",\n  \"email\": \"cuidador@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"password\": \"Admin123!\"\n}" }
           }
         },
         {
-          "name": "Login con cuenta bloqueada (5 intentos fallidos)",
+          "name": "Registro ADMINISTRADOR (rechazado 400)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/login" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"password\": \"wrongpassword\"}" }
-          }
-        },
-        {
-          "name": "Login con correo no verificado",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/login" },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"email\": \"noverificado@test.com\", \"password\": \"Admin123!\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "body": { "mode": "raw", "raw": "{\n  \"curp\": \"HACK000101HDFRRL01\",\n  \"username\": \"hacker\",\n  \"rol\": \"ADMINISTRADOR\",\n  \"nombres\": \"Hacker\",\n  \"apellidoPaterno\": \"X\",\n  \"apellidoMaterno\": \"X\",\n  \"email\": \"hack@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"password\": \"Admin123!\"\n}" }
           }
         },
         {
           "name": "Registro con password débil (rechazado)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/register" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"nombres\": \"Test\", \"apellidoPaterno\": \"User\", \"apellidoMaterno\": \"X\", \"username\": \"weakpwd\", \"email\": \"weak@test.com\", \"codigoPostal\": \"00000\", \"curp\": \"WEEE000101HDFRRL01\", \"rol\": \"ADOPTANTE\", \"password\": \"1234\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "body": { "mode": "raw", "raw": "{\n  \"curp\": \"WEEE000101HDFRRL01\",\n  \"username\": \"weakpwd\",\n  \"rol\": \"ADOPTANTE\",\n  \"nombres\": \"Test\",\n  \"apellidoPaterno\": \"User\",\n  \"apellidoMaterno\": \"X\",\n  \"email\": \"weak@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"password\": \"1234\"\n}" }
+          }
+        },
+        {
+          "name": "Registro con datos duplicados (rechazado)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/register" },
+            "body": { "mode": "raw", "raw": "{\n  \"curp\": \"XAXX010101HNEXXXA1\",\n  \"username\": \"adoptante1\",\n  \"rol\": \"ADOPTANTE\",\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"password\": \"Admin123!\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios - Auth y 2FA",
+      "item": [
+        {
+          "name": "Login (envía código 2FA)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"Admin123!\"\n}" }
+          }
+        },
+        {
+          "name": "Verificar 2FA (obtener token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const res = pm.response.json();", "if (res.token) { pm.collectionVariables.set('token', res.token); }"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/verificar-2fa" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"codigo\": \"XXXXXX\"\n}" }
           }
         },
         {
@@ -68,128 +102,442 @@
           }
         },
         {
-          "name": "Solicitar recuperacion de contraseña",
+          "name": "Login con correo no verificado (403)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/recuperar" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"noverificado@test.com\",\n  \"password\": \"Admin123!\"\n}" }
+          }
+        },
+        {
+          "name": "Login con cuenta bloqueada (423)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/login" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"wrongpassword\"\n}" }
+          }
+        },
+        {
+          "name": "Solicitar recuperación de contraseña",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/recuperar" },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
           }
         },
         {
           "name": "Restablecer contraseña",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/restablecer" },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"token\": \"TOKEN_RECUPERACION\", \"password\": \"NuevaPass123!\"}" }
+            "url": { "raw": "{{baseUrl}}/usuarios/restablecer" },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"TOKEN_RECUPERACION\",\n  \"password\": \"NuevaPass123!\"\n}" }
           }
         },
         {
-          "name": "Registro ADMINISTRADOR (rechazado)",
+          "name": "Logout",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/usuarios/register" },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"nombres\": \"Hacker\", \"apellidoPaterno\": \"X\", \"apellidoMaterno\": \"X\", \"username\": \"hacker\", \"email\": \"hack@test.com\", \"codigoPostal\": \"00000\", \"curp\": \"HACK000101HDFRRL01\", \"rol\": \"ADMINISTRADOR\", \"password\": \"Admin123!\"}" }
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/logout" }
           }
         }
       ]
     },
     {
-      "name": "Reportes y Admin",
+      "name": "Usuarios - Perfil",
       "item": [
         {
-          "name": "Crear reporte (adoptante reporta animal)",
+          "name": "Obtener mi perfil (GET /me)",
           "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/reportes" },
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": { "mode": "raw", "raw": "{\"animalId\": \"ID_ANIMAL\", \"motivo\": \"Publicacion con informacion falsa\"}" }
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/me" }
           }
         },
         {
-          "name": "Verificar si ya reporte un animal",
+          "name": "Actualizar perfil (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/usuarios" },
+            "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Antonio\",\n  \"apellidoPaterno\": \"Zarco\",\n  \"apellidoMaterno\": \"Romero\",\n  \"email\": \"antonio@test.com\",\n  \"codigoPostal\": \"00000\",\n  \"fotoPerfil\": null\n}" }
+          }
+        },
+        {
+          "name": "Eliminar cuenta (DELETE /me)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/usuarios/me" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios - Foto Perfil",
+      "item": [
+        {
+          "name": "Subir foto de perfil",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/uploads/foto-perfil" },
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Animales - CRUD",
+      "item": [
+        {
+          "name": "Crear animal (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales" },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Firulais\",\n  \"especie\": \"PERRO\",\n  \"raza\": \"Labrador\",\n  \"razaId\": null,\n  \"fechaNacimiento\": \"2022-01-15\",\n  \"sexo\": \"MACHO\",\n  \"descripcion\": \"Perro amigable y jugueton\",\n  \"esterilizado\": true\n}" }
+          }
+        },
+        {
+          "name": "Listar animales (Adoptante con filtros)",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/reportes/check/ID_ANIMAL" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales?especie=PERRO&sexo=MACHO&esterilizado=true&ordenar=fecha&ordenDesc=true" }
+          }
+        },
+        {
+          "name": "Listar animales (sin filtros)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales" }
+          }
+        },
+        {
+          "name": "Mis animales (Cuidador GET /me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cuidador}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/me" }
+          }
+        },
+        {
+          "name": "Detalle de un animal (GET /{id})",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}" }
+          }
+        },
+        {
+          "name": "Actualizar animal (PUT /{id})",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}" },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Firulais Actualizado\",\n  \"especie\": \"PERRO\",\n  \"raza\": \"Labrador\",\n  \"fechaNacimiento\": \"2022-01-15\",\n  \"sexo\": \"MACHO\",\n  \"descripcion\": \"Descripcion actualizada\",\n  \"esterilizado\": true\n}" }
+          }
+        },
+        {
+          "name": "Eliminar animal (DELETE)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales" },
+            "body": { "mode": "raw", "raw": "{\n  \"animalId\": \"{{animalId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Historial de adoptados (Cuidador)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cuidador}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/historial-adoptados" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Animales - Fotos",
+      "item": [
+        {
+          "name": "Subir foto de animal",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cuidador}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/fotos" },
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "" }]
+            }
+          }
+        },
+        {
+          "name": "Eliminar foto de animal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/fotos" },
+            "body": { "mode": "raw", "raw": "{\n  \"url\": \"https://res.cloudinary.com/...\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Animales - Vacunas y Padecimientos",
+      "item": [
+        {
+          "name": "Actualizar vacunas de animal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/vacunas" },
+            "body": { "mode": "raw", "raw": "[\"Rabia\", \"Moquillo\", \"Parvovirus\"]" }
+          }
+        },
+        {
+          "name": "Actualizar padecimientos de animal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/padecimientos" },
+            "body": { "mode": "raw", "raw": "[\"Diabetes\", \"Artritis\"]" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interés en Animales",
+      "item": [
+        {
+          "name": "Manifestar interés (Adoptante)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/interes" }
+          }
+        },
+        {
+          "name": "Eliminar interés (Adoptante)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/interes" }
+          }
+        },
+        {
+          "name": "Mis intereses (Adoptante)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/usuarios/me/intereses?limit=20&offset=0" }
+          }
+        },
+        {
+          "name": "Intereses recibidos (Cuidador)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cuidador}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/me/intereses?limit=20&offset=0" }
+          }
+        },
+        {
+          "name": "Interesados en un animal (Cuidador)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cuidador}}" }],
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/interesados" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "Crear reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/reportes" },
+            "body": { "mode": "raw", "raw": "{\n  \"animalId\": \"{{animalId}}\",\n  \"motivo\": \"Publicacion con informacion falsa\"\n}" }
+          }
+        },
+        {
+          "name": "Verificar si ya reporté un animal",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/check/{{animalId}}" }
           }
         },
         {
           "name": "Retirar mi reporte",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/reportes/ID_ANIMAL" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
-          }
-        },
-        {
-          "name": "Listar reportes pendientes (admin)",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
-          }
-        },
-        {
-          "name": "Resolver reporte (admin elimina publicacion)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/resolver" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
-          }
-        },
-        {
-          "name": "Desestimar reporte (admin mantiene publicacion)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/desestimar" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/{{animalId}}" }
           }
         },
         {
           "name": "Reportar via PATCH (con motivo)",
           "request": {
             "method": "PATCH",
-            "url": { "raw": "{{baseUrl}}/api/animales/ID_ANIMAL/inapropiado" },
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
-            "body": { "mode": "raw", "raw": "{\"motivo\": \"Contenido sospechoso\"}" }
-          }
-        },
-        {
-          "name": "Listar interesados en un animal (cuidador)",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/animales/ID_ANIMAL/interesados" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+            "url": { "raw": "{{baseUrl}}/api/animales/{{animalId}}/inapropiado" },
+            "body": { "mode": "raw", "raw": "{\n  \"motivo\": \"Contenido sospechoso\"\n}" }
           }
         }
       ]
     },
     {
-      "name": "Accesos denegados",
+      "name": "Admin - Reportes",
       "item": [
         {
-          "name": "Reportes pendientes (sin ser admin - 403)",
+          "name": "Listar reportes pendientes (Admin)",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" }
           }
         },
         {
-          "name": "Resolver reporte (sin ser admin - 403)",
+          "name": "Resolver reporte (Admin elimina publicación)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/resolver" },
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/resolver" }
+          }
+        },
+        {
+          "name": "Desestimar reporte (Admin mantiene publicación)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/ID_REPORTE/desestimar" }
+          }
+        },
+        {
+          "name": "Reportes pendientes sin ser admin (403)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reportes/pendientes" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogos - Vacunas",
+      "item": [
+        {
+          "name": "Listar vacunas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/vacunas" }
+          }
+        },
+        {
+          "name": "Crear vacuna (Cuidador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/vacunas" },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Triple Felina\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogos - Padecimientos",
+      "item": [
+        {
+          "name": "Listar padecimientos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/padecimientos" }
+          }
+        },
+        {
+          "name": "Crear padecimiento (Cuidador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_cuidador}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/padecimientos" },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Displasia de cadera\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogos - Razas",
+      "item": [
+        {
+          "name": "Listar razas por especie",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/razas?especie=PERRO" }
+          }
+        },
+        {
+          "name": "Info detallada de raza (por razaId)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/razas/info?razaId=UUID_RAZA&especie=PERRO" }
+          }
+        },
+        {
+          "name": "Info detallada de raza (por nombre)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/razas/info?raza=Labrador Retriever&especie=PERRO" }
           }
         }
       ]
