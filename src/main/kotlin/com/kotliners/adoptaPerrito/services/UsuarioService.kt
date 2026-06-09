@@ -376,10 +376,11 @@ class UsuarioService {
         // Si quiere cambiar correo, no lo cambiamos directamente.
         // Guardamos el nuevo correo pendiente y enviamos código de verificación.
         if (emailCambio) {
+            logger.info("Cambio de correo detectado: ${entity.email} -> ${request.email}")
             entity.emailPendiente = request.email
             entity.tokenVerificacion = UUID.randomUUID().toString()
             // Enviar enlace de verificación al NUEVO correo
-            val enlace = "http://localhost:3000/login?verificar-email=${entity.tokenVerificacion}"
+            val enlace = "http://localhost:3000/login?verificar=${entity.tokenVerificacion}"
             val (subject, body) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.verificacionCorreo(entity.nombres, enlace)
             mailAdapter.sendHtmlEmail(request.email, subject, body)
             logger.info("Correo de verificación de cambio enviado a: ${request.email}")
