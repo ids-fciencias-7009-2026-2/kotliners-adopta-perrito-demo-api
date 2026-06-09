@@ -85,10 +85,16 @@ class ReporteService(
 
         val animal = animalRepository.findById(reporte.animalId).orElse(null)
         if (animal != null) {
+            // Obtener todos los motivos de reportes pendientes para este animal
+            val todosReportes = reporteRepository.findAllByAnimalId(reporte.animalId)
+                .filter { it.estado == ReporteEstado.PENDIENTE }
+            val motivos = todosReportes.map { it.motivo }.distinct()
+
             // Obtener cuidador para enviar correo
             val cuidador = usuarioRepository.findById(animal.usuarioId!!).orElse(null)
             if (cuidador != null) {
-                enviarCorreoEliminacion(cuidador.email, animal.nombre, reporte.motivo)
+                val motivosHtml = motivos.joinToString("") { "<li>$it</li>" }
+                enviarCorreoEliminacion(cuidador.email, animal.nombre, "<ul>$motivosHtml</ul>")
             }
             animalRepository.deleteById(animal.id!!)
             logger.info("Animal ${animal.id} eliminado por resolucion de reporte $reporteId")

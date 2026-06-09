@@ -136,4 +136,4 @@ Incluye tests unitarios para `AnimalService`, `MailAdapter` e `InteresService`.
 
 ## Colección Postman
 
-En `postman/Kotliners-Iteracion5.postman_collection.json` está la colección completa con todos los endpoints del sistema. Importar en Postman y configurar las variables `token`, `token_cuidador` y `adminToken` tras autenticarse.
+En `postman/Kotliners-IteracionFinal.postman_collection.json` está la colección completa con todos los endpoints del sistema. Importar en Postman y configurar las variables `token`, `token_cuidador` y `adminToken` tras autenticarse.
