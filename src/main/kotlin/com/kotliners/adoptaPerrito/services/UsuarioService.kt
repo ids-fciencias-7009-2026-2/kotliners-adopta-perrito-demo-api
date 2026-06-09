@@ -177,10 +177,21 @@ class UsuarioService {
 
     /**
      * Verifica el correo del usuario con el token enviado por correo.
+     * Si hay un emailPendiente, aplica el cambio de correo.
      */
     fun verificarCorreo(token: String): Boolean {
         val entity = usuarioRepository.findByTokenVerificacion(token)
             ?: throw IllegalArgumentException("Token de verificación inválido o expirado")
+        // Si es verificación de cambio de correo
+        if (entity.emailPendiente != null) {
+            entity.email = entity.emailPendiente!!
+            entity.emailPendiente = null
+            entity.tokenVerificacion = null
+            usuarioRepository.save(entity)
+            logger.info("Correo actualizado para usuario: ${entity.id}")
+            return true
+        }
+        // Verificación de registro
         entity.verificado = true
         entity.tokenVerificacion = null
         usuarioRepository.save(entity)
@@ -362,22 +373,23 @@ class UsuarioService {
         entity.apellidoPaterno = request.apellidoPaterno
         entity.apellidoMaterno = request.apellidoMaterno
         val emailCambio = entity.email != request.email
-        entity.email = request.email
+        // Si quiere cambiar correo, no lo cambiamos directamente.
+        // Guardamos el nuevo correo pendiente y enviamos código de verificación.
+        if (emailCambio) {
+            entity.emailPendiente = request.email
+            entity.tokenVerificacion = UUID.randomUUID().toString()
+            // Enviar enlace de verificación al NUEVO correo
+            val enlace = "http://localhost:3000/login?verificar-email=${entity.tokenVerificacion}"
+            val (subject, body) = com.kotliners.adoptaPerrito.utils.NotificacionFactory.verificacionCorreo(entity.nombres, enlace)
+            mailAdapter.sendHtmlEmail(request.email, subject, body)
+            logger.info("Correo de verificación de cambio enviado a: ${request.email}")
+        }
         validateCodigoPostal(request.codigoPostal)
         ensureCodigoPostalExists(request.codigoPostal)
         entity.codigoPostal = request.codigoPostal
         if (request.fotoPerfil != null) entity.fotoPerfil = request.fotoPerfil
         entity.fechaUpdate = LocalDateTime.now()
-        // Si cambió el correo, requiere re-verificación
-        if (emailCambio) {
-            entity.verificado = false
-            entity.tokenVerificacion = UUID.randomUUID().toString()
-            entity.token = null // Invalida sesión para forzar re-login tras verificar
-        }
         val saved = usuarioRepository.save(entity)
-        if (emailCambio) {
-            enviarCorreoVerificacion(saved)
-        }
         accionService.registrar(saved.id, "ACTUALIZACION_PERFIL")
         logger.info("Usuario actualizado: ${saved.id}")
         return saved.toUsuario()

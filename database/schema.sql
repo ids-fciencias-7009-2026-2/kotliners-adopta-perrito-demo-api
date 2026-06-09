@@ -51,6 +51,7 @@ CREATE TABLE usuario (
     verificado        BOOLEAN      DEFAULT FALSE,
     token_verificacion TEXT,
     token_recuperacion TEXT,
+    email_pendiente   VARCHAR(255),
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_update     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_eliminado  TIMESTAMP,

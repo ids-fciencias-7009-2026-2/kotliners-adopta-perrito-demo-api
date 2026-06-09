@@ -98,6 +98,10 @@ data class UsuarioEntity(
     @Column(name = "token_recuperacion")
     var tokenRecuperacion: String? = null,
 
+    /** Email pendiente de verificación (cambio de correo) */
+    @Column(name = "email_pendiente")
+    var emailPendiente: String? = null,
+
     /** Fecha de última actualización del perfil */
     @Column(name = "fecha_update")
     var fechaUpdate: LocalDateTime? = null,
