@@ -9,7 +9,9 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UuidGenerator
+import org.hibernate.type.SqlTypes
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -49,7 +51,8 @@ data class AnimalEntity(
 
 	/** Sexo del animal */
 	@Enumerated(EnumType.STRING)
-	@Column(name = "sexo", nullable = false)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+	@Column(name = "sexo", nullable = false, columnDefinition = "sexo_enum")
 	var sexo: Sexo = Sexo.MACHO,
 
 	/** Descripción del animal */
@@ -58,7 +61,8 @@ data class AnimalEntity(
 
 	/** Estatus del animal */
 	@Enumerated(EnumType.STRING)
-	@Column(name = "estatus", nullable = false)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+	@Column(name = "estatus", nullable = false, columnDefinition = "estatus_enum")
 	var estatus: Estatus = Estatus.DISPONIBLE,
 
 	/** UUID del usuario dueño del animal */
