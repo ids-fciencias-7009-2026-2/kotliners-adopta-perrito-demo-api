@@ -51,6 +51,7 @@ CREATE TABLE usuario (
     verificado        BOOLEAN      DEFAULT FALSE,
     token_verificacion TEXT,
     token_recuperacion TEXT,
+    email_pendiente   VARCHAR(255),
     fecha_registro   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_update     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fecha_eliminado  TIMESTAMP,
@@ -729,7 +730,7 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Posavac Hound
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pražský Krysařík', 'Pražský Krysařík') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Presa Canario', 'Perro de Pressa Canario') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pudelpointer', 'perro Pudelpointer') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pug', 'Carlino') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pug', 'Pug') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pugapoo', 'Pugapoo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Puggle', ' Puggle') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Puli', 'perro Puli') ON CONFLICT (especie, nombre_en) DO NOTHING;
@@ -895,9 +896,9 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Zerdava', 'Ze
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Abyssinian', 'Abisinio') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Aegean', 'Egeo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Bobtail', 'Bobtail americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Curl', 'Rizo americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Curl', 'Curl Americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Shorthair', 'Pelo corto americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Wirehair', 'Pelo de alambre americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Wirehair', 'Americano de pelo duro') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Arabian Mau', 'Mau árabe') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Australian Mist', 'Niebla australiana') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Balinese', 'Balinés') ON CONFLICT (especie, nombre_en) DO NOTHING;
@@ -941,7 +942,7 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Norwegian Fore
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ocicat', 'Ocicat') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Oriental', 'Oriental') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Persian', 'Persa') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Pixie-bob', 'gato Pixiebob') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Pixie-bob', 'Pixiebob') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ragamuffin', 'pelagatos') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ragdoll', 'Muñeca de trapo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Russian Blue', 'Azul ruso') ON CONFLICT (especie, nombre_en) DO NOTHING;
@@ -966,15 +967,15 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'York Chocolate
 -- =========================
 INSERT INTO usuario (curp, username, foto_perfil, email, nombres, apellido_paterno, apellido_materno, password, codigo_postal, rol, verificado)
 VALUES (
-    'ADMIN00000000000A',
-    'admin',
-    NULL,
-    'admin@colitas.mx',
-    'Administrador',
-    'Sistema',
-    'Colitas',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-    '00000',
-    'ADMINISTRADOR',
-    TRUE
+  'ADMIN00000000000A',
+  'admin',
+  NULL,
+  'colitasfeliceskotliners@gmail.com',
+  'Administrador',
+  'Sistema',
+  'Colitas',
+  '$2b$10$JiaurFlffKk1udLFV3RkTeYpLwskkTTKqx7gWWMuyVFEYikSU3ZN.',
+  '00000',
+  'ADMINISTRADOR',
+  TRUE
 ) ON CONFLICT (email) DO NOTHING;
