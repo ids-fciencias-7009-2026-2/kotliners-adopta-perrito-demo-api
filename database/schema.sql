@@ -730,7 +730,7 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Posavac Hound
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pražský Krysařík', 'Pražský Krysařík') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Presa Canario', 'Perro de Pressa Canario') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pudelpointer', 'perro Pudelpointer') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pug', 'Carlino') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pug', 'Pug') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Pugapoo', 'Pugapoo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Puggle', ' Puggle') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Puli', 'perro Puli') ON CONFLICT (especie, nombre_en) DO NOTHING;
@@ -896,9 +896,9 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Zerdava', 'Ze
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Abyssinian', 'Abisinio') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Aegean', 'Egeo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Bobtail', 'Bobtail americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Curl', 'Rizo americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Curl', 'Curl Americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Shorthair', 'Pelo corto americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Wirehair', 'Pelo de alambre americano') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'American Wirehair', 'Americano de pelo duro') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Arabian Mau', 'Mau árabe') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Australian Mist', 'Niebla australiana') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Balinese', 'Balinés') ON CONFLICT (especie, nombre_en) DO NOTHING;
@@ -942,7 +942,7 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Norwegian Fore
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ocicat', 'Ocicat') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Oriental', 'Oriental') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Persian', 'Persa') ON CONFLICT (especie, nombre_en) DO NOTHING;
-INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Pixie-bob', 'gato Pixiebob') ON CONFLICT (especie, nombre_en) DO NOTHING;
+INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Pixie-bob', 'Pixiebob') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ragamuffin', 'pelagatos') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Ragdoll', 'Muñeca de trapo') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'Russian Blue', 'Azul ruso') ON CONFLICT (especie, nombre_en) DO NOTHING;
