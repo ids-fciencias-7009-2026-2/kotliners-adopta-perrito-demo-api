@@ -93,7 +93,8 @@ class ReporteService(
             // Obtener cuidador para enviar correo
             val cuidador = usuarioRepository.findById(animal.usuarioId!!).orElse(null)
             if (cuidador != null) {
-                enviarCorreoEliminacion(cuidador.email, animal.nombre, motivos.joinToString("; "))
+                val motivosHtml = motivos.joinToString("") { "<li>$it</li>" }
+                enviarCorreoEliminacion(cuidador.email, animal.nombre, "<ul>$motivosHtml</ul>")
             }
             animalRepository.deleteById(animal.id!!)
             logger.info("Animal ${animal.id} eliminado por resolucion de reporte $reporteId")
