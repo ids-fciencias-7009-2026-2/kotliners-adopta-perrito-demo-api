@@ -103,6 +103,11 @@ class UsuarioController {
     ): ResponseEntity<Any> {
         logger.info("Solicitud de registro recibida para: ${createUsuarioRequest.email}")
 
+        // No permitir registro como ADMINISTRADOR
+        if (createUsuarioRequest.rol == com.kotliners.adoptaPerrito.domain.Rol.ADMINISTRADOR) {
+            return ResponseEntity.badRequest().body("Rol no permitido para registro.")
+        }
+
         // Validar complejidad de contraseña (patron Strategy)
         val passwordErrors = PasswordValidator.validate(createUsuarioRequest.password)
         if (passwordErrors.isNotEmpty()) {
