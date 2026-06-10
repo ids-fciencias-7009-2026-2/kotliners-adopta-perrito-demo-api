@@ -971,7 +971,7 @@ INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('GATO', 'York Chocolate
 -- Password: Admin123! (hash BCrypt)
 -- =========================
 INSERT INTO usuario (curp, username, foto_perfil, email, nombres, apellido_paterno, apellido_materno, password, codigo_postal, rol, verificado)
-VALUES (
+SELECT
   'ADMIN00000000000A',
   'admin',
   NULL,
@@ -983,4 +983,4 @@ VALUES (
   '00000',
   'ADMINISTRADOR',
   TRUE
-) ON CONFLICT (email) DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM usuario WHERE email = 'colitasfeliceskotliners@gmail.com' AND fecha_eliminado IS NULL);
