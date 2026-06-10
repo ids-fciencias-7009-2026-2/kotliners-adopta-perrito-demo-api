@@ -1,9 +1,7 @@
 package com.kotliners.adoptaPerrito.entities
 
 import jakarta.persistence.*
-import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UuidGenerator
-import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -30,8 +28,7 @@ data class ReporteEntity(
     val motivo: String = "",
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "estado", nullable = false, columnDefinition = "reporte_estado_enum")
+    @Column(name = "estado", nullable = false)
     var estado: ReporteEstado = ReporteEstado.PENDIENTE,
 
     @Column(name = "fecha")
