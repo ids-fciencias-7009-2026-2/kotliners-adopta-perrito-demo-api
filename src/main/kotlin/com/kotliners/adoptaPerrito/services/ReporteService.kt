@@ -75,6 +75,7 @@ class ReporteService(
     /**
      * Resuelve un reporte: elimina la publicación y envía correo al cuidador.
      */
+    @Transactional
     fun resolver(reporteId: UUID): ReporteEntity {
         val reporte = reporteRepository.findById(reporteId).orElseThrow {
             IllegalArgumentException("Reporte no encontrado")
@@ -83,14 +84,23 @@ class ReporteService(
             throw IllegalArgumentException("Este reporte ya fue procesado")
         }
 
+        // 1. Marcar TODOS los reportes del animal como RESUELTOS primero
+        val todosReportes = reporteRepository.findAllByAnimalId(reporte.animalId)
+            .filter { it.estado == ReporteEstado.PENDIENTE }
+        val motivos = todosReportes.map { it.motivo }.distinct()
+
+        todosReportes.forEach {
+            it.estado = ReporteEstado.RESUELTO
+            it.fechaResolucion = LocalDateTime.now()
+        }
+        reporteRepository.saveAll(todosReportes)
+
+        // 2. Eliminar reportes de la BD antes de borrar el animal (evita conflicto con CASCADE)
+        reporteRepository.deleteAll(todosReportes)
+
+        // 3. Ahora eliminar el animal
         val animal = animalRepository.findById(reporte.animalId).orElse(null)
         if (animal != null) {
-            // Obtener todos los motivos de reportes pendientes para este animal
-            val todosReportes = reporteRepository.findAllByAnimalId(reporte.animalId)
-                .filter { it.estado == ReporteEstado.PENDIENTE }
-            val motivos = todosReportes.map { it.motivo }.distinct()
-
-            // Obtener cuidador para enviar correo
             val cuidador = usuarioRepository.findById(animal.usuarioId!!).orElse(null)
             if (cuidador != null) {
                 val motivosHtml = motivos.joinToString("") { "<li>$it</li>" }
@@ -100,19 +110,10 @@ class ReporteService(
             logger.info("Animal ${animal.id} eliminado por resolucion de reporte $reporteId")
         }
 
+        // Devolver una copia del reporte resuelto (ya no existe en BD)
         reporte.estado = ReporteEstado.RESUELTO
         reporte.fechaResolucion = LocalDateTime.now()
-
-        // Resolver tambien otros reportes del mismo animal
-        reporteRepository.findAllByAnimalId(reporte.animalId)
-            .filter { it.estado == ReporteEstado.PENDIENTE && it.id != reporteId }
-            .forEach {
-                it.estado = ReporteEstado.RESUELTO
-                it.fechaResolucion = LocalDateTime.now()
-                reporteRepository.save(it)
-            }
-
-        return reporteRepository.save(reporte)
+        return reporte
     }
 
     /**
