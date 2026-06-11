@@ -49,7 +49,7 @@ data class AnimalEntity(
 
 	/** Sexo del animal */
 	@Enumerated(EnumType.STRING)
-	@Column(name = "sexo", nullable = false)
+	@Column(name = "sexo", nullable = false, columnDefinition = "sexo_enum")
 	var sexo: Sexo = Sexo.MACHO,
 
 	/** Descripción del animal */
@@ -58,7 +58,7 @@ data class AnimalEntity(
 
 	/** Estatus del animal */
 	@Enumerated(EnumType.STRING)
-	@Column(name = "estatus", nullable = false)
+	@Column(name = "estatus", nullable = false, columnDefinition = "estatus_enum")
 	var estatus: Estatus = Estatus.DISPONIBLE,
 
 	/** UUID del usuario dueño del animal */

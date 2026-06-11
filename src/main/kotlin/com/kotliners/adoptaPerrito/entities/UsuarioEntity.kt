@@ -8,9 +8,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.EnumType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UuidGenerator
-import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -28,16 +26,15 @@ data class UsuarioEntity(
     val id: UUID? = null,
 
     /** Clave Única de Registro de Población */
-    @Column(name = "curp", unique = true, nullable = false, length = 18)
+    @Column(name = "curp", nullable = false, length = 18)
     var curp: String = "",
 
     /** Nombre de usuario único en el sistema */
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(name = "username", nullable = false)
     var username: String = "",
 
     /** Rol del usuario: ADOPTANTE o CUIDADOR */
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "rol", nullable = false, columnDefinition = "rol_enum")
     var rol: Rol = Rol.ADOPTANTE,
 
@@ -58,7 +55,7 @@ data class UsuarioEntity(
     var apellidoMaterno: String = "",
 
     /** Correo electrónico único del usuario */
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(name = "email", nullable = false)
     var email: String = "",
 
     /** Código postal del usuario */

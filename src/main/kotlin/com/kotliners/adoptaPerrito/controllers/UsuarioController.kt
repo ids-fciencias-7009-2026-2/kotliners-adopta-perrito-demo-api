@@ -152,6 +152,22 @@ class UsuarioController {
     }
 
     /**
+     * Reenvía el correo de verificación.
+     * URL: POST /usuarios/reenviar-verificacion
+     * Body: { "email": "..." }
+     */
+    @PostMapping("/reenviar-verificacion")
+    fun reenviarVerificacion(@RequestBody body: Map<String, String>): ResponseEntity<Any> {
+        val email = body["email"] ?: return ResponseEntity.badRequest().body("Email requerido")
+        return try {
+            userService.reenviarVerificacion(email)
+            ResponseEntity.ok(mapOf("mensaje" to "Correo de verificación reenviado."))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.ok(mapOf("mensaje" to "Si el correo existe, recibirás el enlace de verificación."))
+        }
+    }
+
+    /**
      * Restablece la contraseña con el token de recuperación.
      * URL: POST /usuarios/restablecer
      * Body: { "token": "...", "password": "..." }
