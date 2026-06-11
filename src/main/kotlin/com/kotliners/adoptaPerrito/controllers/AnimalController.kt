@@ -113,7 +113,12 @@ class AnimalController {
             logger.info("Animal creado correctamente con ID: ${created.id}")
             return ResponseEntity.status(201).body(created.toAnimalResponse())
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
      }
 
@@ -144,7 +149,12 @@ class AnimalController {
                 animal.toAnimalResponse(foto, interesados)
             })
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -231,7 +241,12 @@ class AnimalController {
                 })
             }
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -257,7 +272,12 @@ class AnimalController {
             val detalle = animalService.getAnimalDetalle(id, animal)
             return ResponseEntity.ok(detalle)
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
      }
 
@@ -306,7 +326,12 @@ class AnimalController {
                 ResponseEntity.status(404).body("Animal no encontrado")
             }
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -350,7 +375,12 @@ class AnimalController {
                 ResponseEntity.status(404).body("Animal no encontrado")
             }
         } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            return if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -372,7 +402,12 @@ class AnimalController {
             animalService.updateVacunas(id, nombres, userFound.id!!, userFound.rol)
             ResponseEntity.ok("Vacunas actualizadas")
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -394,7 +429,12 @@ class AnimalController {
             animalService.updatePadecimientos(id, nombres, userFound.id!!, userFound.rol)
             ResponseEntity.ok("Padecimientos actualizados")
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
     /**
@@ -419,7 +459,12 @@ class AnimalController {
             )
             ResponseEntity.ok(historial)
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 

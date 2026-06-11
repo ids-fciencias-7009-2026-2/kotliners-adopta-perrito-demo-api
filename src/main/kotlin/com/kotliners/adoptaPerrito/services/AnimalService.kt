@@ -447,7 +447,7 @@ class AnimalService {
         }
         val fotos = fotoAnimalRepository.findByAnimalId(uuid)
         val foto = fotos.find { it.foto == url } ?: throw IllegalArgumentException("Foto no encontrada")
-        fotoAnimalRepository.deleteById(foto.id!!)
+        fotoAnimalRepository.delete(foto)
         logger.info("Foto eliminada para animal $animalId: $url")
     }
 

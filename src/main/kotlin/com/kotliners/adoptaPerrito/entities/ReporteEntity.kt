@@ -28,7 +28,7 @@ data class ReporteEntity(
     val motivo: String = "",
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false)
+    @Column(name = "estado", nullable = false, columnDefinition = "reporte_estado_enum")
     var estado: ReporteEstado = ReporteEstado.PENDIENTE,
 
     @Column(name = "fecha")

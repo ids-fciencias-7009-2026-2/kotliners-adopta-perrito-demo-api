@@ -32,8 +32,8 @@ interface AnimalRepository : JpaRepository<AnimalEntity, UUID> {
           AND (CAST(:especie AS VARCHAR) IS NULL OR UPPER(a.especie) = UPPER(CAST(:especie AS VARCHAR)))
           AND (CAST(:sexo AS VARCHAR) IS NULL OR a.sexo::text = CAST(:sexo AS VARCHAR))
           AND (:esterilizado IS NULL OR a.esterilizado = :esterilizado)
-          AND (CAST(:codigoPostal AS VARCHAR) IS NULL OR u.codigo_postal = CAST(:codigoPostal AS VARCHAR))
-          AND (CAST(:vacunaNombre AS VARCHAR) IS NULL OR (v.nombre IS NOT NULL AND LOWER(v.nombre) = LOWER(CAST(:vacunaNombre AS VARCHAR))))
+          AND (CAST(:codigoPostal AS VARCHAR) IS NULL OR u.codigo_postal = ANY(string_to_array(CAST(:codigoPostal AS VARCHAR), ',')))
+          AND (CAST(:vacunaNombre AS VARCHAR) IS NULL OR (v.nombre IS NOT NULL AND LOWER(v.nombre) = ANY(SELECT LOWER(unnest(string_to_array(CAST(:vacunaNombre AS VARCHAR), ','))))))
           AND (CAST(:razaId AS UUID) IS NULL OR a.raza_id = CAST(:razaId AS UUID))
           AND (:sinPadecimientos = false OR NOT EXISTS (
               SELECT 1 FROM animal_padecimiento ap WHERE ap.animal_id = a.animal_id

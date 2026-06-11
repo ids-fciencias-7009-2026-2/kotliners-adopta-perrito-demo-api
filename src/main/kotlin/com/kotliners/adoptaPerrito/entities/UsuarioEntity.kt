@@ -35,7 +35,7 @@ data class UsuarioEntity(
 
     /** Rol del usuario: ADOPTANTE o CUIDADOR */
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol", nullable = false)
+    @Column(name = "rol", nullable = false, columnDefinition = "rol_enum")
     var rol: Rol = Rol.ADOPTANTE,
 
     /** URL de la foto de perfil (opcional) */

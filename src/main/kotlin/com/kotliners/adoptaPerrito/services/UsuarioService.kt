@@ -176,6 +176,19 @@ class UsuarioService {
     }
 
     /**
+     * Reenvía el correo de verificación para un usuario no verificado.
+     */
+    fun reenviarVerificacion(email: String) {
+        val entity = usuarioRepository.findByEmail(email) ?: return
+        if (entity.verificado) return
+        if (entity.tokenVerificacion == null) {
+            entity.tokenVerificacion = java.util.UUID.randomUUID().toString()
+            usuarioRepository.save(entity)
+        }
+        enviarCorreoVerificacion(entity)
+    }
+
+    /**
      * Verifica el correo del usuario con el token enviado por correo.
      * Si hay un emailPendiente, aplica el cambio de correo.
      */

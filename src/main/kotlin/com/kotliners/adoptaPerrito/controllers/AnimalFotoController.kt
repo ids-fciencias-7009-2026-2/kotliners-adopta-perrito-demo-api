@@ -45,7 +45,12 @@ class AnimalFotoController {
             logger.info("Foto subida para animal $id: $url")
             ResponseEntity.ok(mapOf("url" to url))
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 
@@ -63,12 +68,18 @@ class AnimalFotoController {
         if (token == null) return ResponseEntity.status(401).body("Token requerido")
         val userFound = userService.findByToken(token.replace("Bearer ", "").trim())
             ?: return ResponseEntity.status(401).body("Token invalido")
+            
         val url = body["url"] ?: return ResponseEntity.badRequest().body("URL requerida")
         return try {
             animalService.eliminarFoto(id, url, userFound.id!!, userFound.rol)
             ResponseEntity.ok("Foto eliminada")
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(403).body(e.message ?: "No autorizado")
+            val msg = e.message ?: "No autorizado"
+            if (msg.contains("no encontrad", ignoreCase = true)) {
+                ResponseEntity.status(404).body(msg)
+            } else {
+                ResponseEntity.status(403).body(msg)
+            }
         }
     }
 }

@@ -72,6 +72,10 @@ class ReporteService(
         return reporteRepository.findAllByEstadoOrderByFechaDesc(ReporteEstado.PENDIENTE)
     }
 
+    fun getNombreAnimal(animalId: UUID): String {
+        return animalRepository.findById(animalId).orElse(null)?.nombre ?: "Eliminado"
+    }
+
     /**
      * Resuelve un reporte: elimina la publicación y envía correo al cuidador.
      */

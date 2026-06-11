@@ -90,7 +90,23 @@ class ReporteController(
         if (usuario.rol != Rol.ADMINISTRADOR) {
             return ResponseEntity.status(403).body("Acceso denegado")
         }
-        return ResponseEntity.ok(reporteService.listarPendientes())
+        val reportes = reporteService.listarPendientes()
+        val animalIds = reportes.map { it.animalId }.distinct()
+        val nombres = animalIds.associateWith { id ->
+            reporteService.getNombreAnimal(id)
+        }
+        return ResponseEntity.ok(reportes.map { r ->
+            mapOf(
+                "id" to r.id,
+                "usuarioId" to r.usuarioId,
+                "animalId" to r.animalId,
+                "motivo" to r.motivo,
+                "estado" to r.estado.name,
+                "fecha" to r.fecha,
+                "fechaResolucion" to r.fechaResolucion,
+                "nombreAnimal" to (nombres[r.animalId] ?: "Desconocido")
+            )
+        })
     }
 
     /**
