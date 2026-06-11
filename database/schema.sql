@@ -264,12 +264,11 @@ INSERT INTO padecimiento (nombre) VALUES
   ('Anemia')
 ON CONFLICT (nombre) DO NOTHING;
 
--- =========================
 
 -- =========================
 -- SEED: Razas de perros y gatos
 -- =========================
--- SEED: Razas de perros y gatos (con nombres en espanol)
+
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Affenpinscher', 'Affenpinscher') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Afghan Hound', 'Sabueso afgano') ON CONFLICT (especie, nombre_en) DO NOTHING;
 INSERT INTO raza (especie, nombre_en, nombre_es) VALUES ('PERRO', 'Africanis', 'Africanis') ON CONFLICT (especie, nombre_en) DO NOTHING;

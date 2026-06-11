@@ -237,7 +237,8 @@ class AnimalController {
                     val foto = animalService.getPrimeraFoto(animal.id ?: "")
                     val coords = animalService.getCoordsForAnimal(animal)
                     val cuidador = animalService.getCuidadorInfo(animal.usuarioId)
-                    animal.toAnimalResponse(foto, 0, coords?.first, coords?.second, cuidador?.first, cuidador?.second)
+                    val cp = animalService.getCuidadorCodigoPostal(animal.usuarioId)
+                    animal.toAnimalResponse(foto, 0, coords?.first, coords?.second, cuidador?.first, cuidador?.second, cp)
                 })
             }
         } catch (e: IllegalArgumentException) {
