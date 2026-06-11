@@ -19,6 +19,7 @@ import com.kotliners.adoptaPerrito.repositories.VacunaRepository
 import com.kotliners.adoptaPerrito.repositories.PadecimientoRepository
 import com.kotliners.adoptaPerrito.repositories.AnimalVacunaRepository
 import com.kotliners.adoptaPerrito.repositories.AnimalPadecimientoRepository
+import com.kotliners.adoptaPerrito.repositories.RazaRepository
 import com.kotliners.adoptaPerrito.repositories.toAnimalEntity
 
 import org.slf4j.Logger
@@ -59,6 +60,9 @@ class AnimalService {
     lateinit var animalPadecimientoRepository: AnimalPadecimientoRepository
 
     @Autowired
+    lateinit var razaRepository: RazaRepository
+
+    @Autowired
     lateinit var animalInteresRepository: com.kotliners.adoptaPerrito.repositories.AnimalInteresRepository
 
     @Autowired
@@ -81,6 +85,13 @@ class AnimalService {
         if (requesterRole != Rol.CUIDADOR) {
             logger.warn("Intento de crear animal por usuario sin rol CUIDADOR: $requesterRole")
             throw IllegalArgumentException("Solo usuarios con rol CUIDADOR pueden crear animales")
+        }
+        // Validar que la raza exista en la base de datos
+        if (animal.razaId != null) {
+            val razaUuid = UUID.fromString(animal.razaId)
+            if (!razaRepository.existsById(razaUuid)) {
+                throw IllegalArgumentException("La raza seleccionada no existe")
+            }
         }
         val entity = animal.toAnimalEntity()
         val saved = animalRepository.save(entity)
@@ -408,6 +419,14 @@ class AnimalService {
         val uuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) { return null }
         val entity = usuarioRepository.findById(uuid).orElse(null) ?: return null
         return Pair(entity.username, entity.fotoPerfil)
+    }
+
+    /**
+     * Obtiene el código postal del cuidador.
+     */
+    fun getCuidadorCodigoPostal(usuarioId: String): String? {
+        val uuid = try { UUID.fromString(usuarioId) } catch (e: IllegalArgumentException) { return null }
+        return usuarioRepository.findById(uuid).orElse(null)?.codigoPostal
     }
 
     /**
