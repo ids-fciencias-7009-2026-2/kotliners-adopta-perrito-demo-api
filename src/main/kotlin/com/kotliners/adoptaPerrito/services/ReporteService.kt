@@ -131,10 +131,20 @@ class ReporteService(
             throw IllegalArgumentException("Este reporte ya fue procesado")
         }
 
-        reporte.estado = ReporteEstado.DESESTIMADO
-        reporte.fechaResolucion = LocalDateTime.now()
-        logger.info("Reporte $reporteId desestimado")
-        return reporteRepository.save(reporte)
+        val reportesAnimal = reporteRepository.findAllByAnimalId(reporte.animalId)
+                                .filter { 
+                                    it.estado == ReporteEstado.PENDIENTE 
+                                }
+        val ahora = LocalDateTime.now()
+        reportesAnimal.forEach {
+            it.estado = ReporteEstado.DESESTIMADO
+            it.fechaResolucion = ahora
+        }
+        logger.info(
+            "Se desestimaron ${reportesAnimal.size} reportes del animal ${reporte.animalId}"
+        )
+        reporteRepository.saveAll(reportesAnimal)
+        return reporte
     }
 
     private fun enviarCorreoEliminacion(email: String, nombreAnimal: String, motivo: String) {
